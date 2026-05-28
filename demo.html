@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NeuroADHD — Live Demo</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="css/demo.css"/>
+</head>
+<body>
+
+<!-- ══ TOP BAR ══ -->
+<header class="topbar">
+  <div class="tb-brand"><i class="fas fa-brain"></i><span>Neuro<b>ADHD</b></span><span class="tb-badge">LIVE DEMO</span></div>
+  <div class="tb-step-info">
+    <span class="tb-step-num" id="tbNum"></span>
+    <span class="tb-step-name" id="tbName">Press Play to begin</span>
+  </div>
+  <div class="tb-controls">
+    <button class="tc" id="prevBtn" title="Previous"><i class="fas fa-step-backward"></i></button>
+    <button class="tc play-tc" id="playBtn"><i class="fas fa-play" id="playIcon"></i></button>
+    <button class="tc" id="nextBtn" title="Next"><i class="fas fa-step-forward"></i></button>
+    <button class="tc" id="fsBtn" title="Fullscreen"><i class="fas fa-expand"></i></button>
+    <a href="index.html" class="tc" title="Home"><i class="fas fa-home"></i></a>
+  </div>
+  <div class="tb-prog"><div class="tb-prog-fill" id="stepFill"></div></div>
+</header>
+
+<!-- ══ STAGE ══ -->
+<main class="stage" id="stage">
+
+  <!-- ── STEP 0 TITLE ── -->
+  <div class="step active" id="step-0">
+    <canvas id="titleCvs" class="step-bg"></canvas>
+    <div class="title-content">
+      <div class="tt-badge"><i class="fas fa-flask"></i> Research Project · EEG-Based ADHD Detection</div>
+      <h1 class="tt-h1">EEG-Based <span class="c">ADHD Detection</span><br>with <span class="p">Explainable AI</span></h1>
+      <p class="tt-sub">Click Play — watch the full pipeline animate step by step, just like a video.<br>From EEG acquisition → CNN + TCN deep learning → clinical prediction.</p>
+      <div class="tt-steps">
+        <div class="tts"><i class="fas fa-brain"></i>1. EEG Acquire</div>
+        <i class="fas fa-chevron-right tts-arr"></i>
+        <div class="tts"><i class="fas fa-filter"></i>2. Preprocess</div>
+        <i class="fas fa-chevron-right tts-arr"></i>
+        <div class="tts"><i class="fas fa-wave-square"></i>3. Freq Analysis</div>
+        <i class="fas fa-chevron-right tts-arr"></i>
+        <div class="tts"><i class="fas fa-chart-bar"></i>4. Feature Extract</div>
+        <i class="fas fa-chevron-right tts-arr"></i>
+        <div class="tts"><i class="fas fa-microchip"></i>5. CNN + TCN</div>
+        <i class="fas fa-chevron-right tts-arr"></i>
+        <div class="tts"><i class="fas fa-diagnoses"></i>6. Predict</div>
+        <i class="fas fa-chevron-right tts-arr"></i>
+        <div class="tts"><i class="fas fa-map"></i>7. Attn Heatmap</div>
+        <i class="fas fa-chevron-right tts-arr"></i>
+        <div class="tts"><i class="fas fa-brain"></i>8. Brain Map</div>
+        <i class="fas fa-chevron-right tts-arr"></i>
+        <div class="tts done"><i class="fas fa-file-medical"></i>9. Summary</div>
+      </div>
+      <button class="btn-play-big" id="startBtn">
+        <i class="fas fa-play-circle"></i>
+        <div><span>▶  Play Full Walkthrough</span><small>Auto-advances through all 9 steps · ~2 minutes</small></div>
+      </button>
+      <div class="tt-hint"><kbd>Space</kbd> Play/Pause &nbsp;·&nbsp; <kbd>←</kbd> <kbd>→</kbd> Navigate &nbsp;·&nbsp; <kbd>F</kbd> Fullscreen</div>
+    </div>
+  </div>
+
+  <!-- ── STEP 1 LOAD .mat ── -->
+  <div class="step" id="step-1">
+    <div class="step-badge">STEP 1 / 9</div>
+    <div class="s2col">
+
+      <!-- LEFT — recording scene description + data card -->
+      <div class="scol-l">
+        <div class="s-tag"><i class="fas fa-brain"></i> Step 1 — EEG Signal Acquisition</div>
+        <h2>Doctor Records the <span class="c">Brain Signals</span></h2>
+        <p>A clinical neurologist places 19 electrodes on the patient's scalp following the <strong>10–20 international system</strong>. The EEG amplifier digitises brain activity at 256 Hz for 10 minutes.</p>
+
+        <!-- recording steps -->
+        <div class="rec-steps">
+          <div class="rs" id="rs1"><div class="rs-ic"><i class="fas fa-user-md"></i></div><div class="rs-txt"><strong>Electrode Placement</strong><span>19-channel 10–20 system · conductive gel applied</span></div><span class="rs-tag" id="rst1"></span></div>
+          <div class="rs" id="rs2"><div class="rs-ic"><i class="fas fa-plug"></i></div><div class="rs-txt"><strong>Amplifier Connected</strong><span>256 Hz sampling · impedance &lt; 5 kΩ verified</span></div><span class="rs-tag" id="rst2"></span></div>
+          <div class="rs" id="rs3"><div class="rs-ic"><i class="fas fa-circle-dot" style="color:#ef4444"></i></div><div class="rs-txt"><strong>Recording Started</strong><span>Patient relaxed, eyes closed · 10 min session</span></div><span class="rs-tag rs-rec" id="rst3"><span class="rs-dot"></span> RECORDING</span></div>
+          <div class="rs" id="rs4"><div class="rs-ic"><i class="fas fa-floppy-disk"></i></div><div class="rs-txt"><strong>Data Exported</strong><span>Saved as patient_adhd_01.mat — EEGLAB format</span></div><span class="rs-tag rs-done" id="rst4"></span></div>
+        </div>
+
+        <!-- file card -->
+        <div class="file-card" id="fc1" style="margin-top:.75rem">
+          <div class="fc-icon"><i class="fas fa-file-code"></i></div>
+          <div><div class="fc-name">patient_adhd_01.mat</div><div class="fc-meta">MATLAB 7.3 · EEGLAB · 14.2 MB</div></div>
+          <div class="fc-status" id="fcStat"><i class="fas fa-spinner fa-spin"></i> Reading…</div>
+        </div>
+
+        <!-- info tiles -->
+        <div class="info-tiles" id="infoTiles">
+          <div class="it"><div class="it-v" id="itCh">—</div><div class="it-k">Channels</div></div>
+          <div class="it"><div class="it-v" id="itSr">—</div><div class="it-k">Sample Rate</div></div>
+          <div class="it"><div class="it-v" id="itDur">—</div><div class="it-k">Duration</div></div>
+          <div class="it"><div class="it-v" id="itPts">—</div><div class="it-k">Data Points</div></div>
+        </div>
+      </div>
+
+      <!-- RIGHT — animated EEG recording illustration + live signal -->
+      <div class="scol-r">
+
+        <!-- animated head + electrode scene -->
+        <div class="rec-scene" id="recScene">
+          <svg id="recSVG" viewBox="0 0 420 280" xmlns="http://www.w3.org/2000/svg">
+
+            <!-- doctor silhouette (left) -->
+            <g id="doctorG" opacity="0">
+              <!-- coat -->
+              <ellipse cx="68" cy="210" rx="28" ry="40" fill="#1c2333" stroke="#30363d" stroke-width="1.5"/>
+              <!-- head -->
+              <circle cx="68" cy="155" r="22" fill="#2d333b" stroke="#30363d" stroke-width="1.5"/>
+              <!-- stethoscope -->
+              <path d="M55 175 Q48 195 52 205" stroke="#00d4ff" stroke-width="2" fill="none"/>
+              <circle cx="52" cy="207" r="4" fill="#00d4ff" opacity=".7"/>
+              <!-- label -->
+              <text x="68" y="260" text-anchor="middle" font-size="9" fill="#8b949e" font-family="Inter,sans-serif">Neurologist</text>
+              <!-- arm extended toward patient -->
+              <line id="docArm" x1="90" y1="178" x2="90" y2="178" stroke="#2d333b" stroke-width="5" stroke-linecap="round"/>
+            </g>
+
+            <!-- patient head (centre) -->
+            <g id="patientG" opacity="0">
+              <!-- body -->
+              <rect x="170" y="205" width="60" height="55" rx="8" fill="#1c2333" stroke="#30363d" stroke-width="1.5"/>
+              <!-- neck -->
+              <rect x="191" y="192" width="18" height="18" rx="4" fill="#2d333b"/>
+              <!-- head -->
+              <ellipse cx="200" cy="168" rx="38" ry="44" fill="#2d333b" stroke="#30363d" stroke-width="2"/>
+              <!-- eyes closed -->
+              <line x1="188" y1="163" x2="196" y2="163" stroke="#8b949e" stroke-width="2" stroke-linecap="round"/>
+              <line x1="204" y1="163" x2="212" y2="163" stroke="#8b949e" stroke-width="2" stroke-linecap="round"/>
+              <!-- ear -->
+              <ellipse cx="162" cy="172" rx="5" ry="8" fill="#2d333b" stroke="#30363d" stroke-width="1.5"/>
+              <ellipse cx="238" cy="172" rx="5" ry="8" fill="#2d333b" stroke="#30363d" stroke-width="1.5"/>
+              <!-- label -->
+              <text x="200" y="272" text-anchor="middle" font-size="9" fill="#8b949e" font-family="Inter,sans-serif">Patient</text>
+            </g>
+
+            <!-- EEG machine (right) -->
+            <g id="machineG" opacity="0">
+              <rect x="300" y="160" width="90" height="70" rx="8" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+              <!-- screen -->
+              <rect x="308" y="168" width="74" height="40" rx="4" fill="#0d1117" stroke="#21262d" stroke-width="1"/>
+              <!-- screen content — mini EEG lines -->
+              <polyline id="mEEG1" points="" stroke="#00d4ff" stroke-width="1" fill="none"/>
+              <polyline id="mEEG2" points="" stroke="#7c3aed" stroke-width="1" fill="none"/>
+              <polyline id="mEEG3" points="" stroke="#10b981" stroke-width=".8" fill="none"/>
+              <!-- brand -->
+              <text x="345" y="220" text-anchor="middle" font-size="7.5" fill="#484f58" font-family="JetBrains Mono,monospace">EEG AMPLIFIER</text>
+              <!-- record LED -->
+              <circle id="recLED" cx="375" cy="152" r="5" fill="#30363d"/>
+              <text x="345" y="148" text-anchor="middle" font-size="7" fill="#484f58" font-family="Inter,sans-serif">256 Hz · 19 ch</text>
+              <!-- label -->
+              <text x="345" y="248" text-anchor="middle" font-size="9" fill="#8b949e" font-family="Inter,sans-serif">EEG Machine</text>
+            </g>
+
+            <!-- electrode dots on head (appear one by one) -->
+            <g id="electrodeG"></g>
+
+            <!-- signal wires from head to machine -->
+            <g id="wiresG" opacity="0">
+              <path d="M238 145 Q270 130 300 185" stroke="#00d4ff" stroke-width="1" fill="none" stroke-dasharray="4 3" opacity=".5"/>
+              <path d="M235 165 Q268 155 300 190" stroke="#7c3aed" stroke-width="1" fill="none" stroke-dasharray="4 3" opacity=".4"/>
+              <path d="M233 180 Q266 178 300 195" stroke="#10b981" stroke-width=".8" fill="none" stroke-dasharray="4 3" opacity=".4"/>
+            </g>
+
+            <!-- signal pulse travelling wire -->
+            <circle id="sigPulse" r="3.5" fill="#00d4ff" opacity="0">
+              <animateMotion id="pulseAnim" dur="1.4s" repeatCount="indefinite" begin="indefinite"
+                path="M238,145 Q270,130 300,185"/>
+            </circle>
+
+          </svg>
+        </div>
+
+        <!-- live EEG canvas -->
+        <canvas id="rawEEG" class="eeg-cvs" style="margin-top:.5rem"></canvas>
+        <div class="cvs-lbl" id="eegCvsLbl">Waiting for recording to begin…</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── STEP 2 PREPROCESSING ── -->
+  <div class="step" id="step-2">
+    <div class="step-badge">STEP 2 / 9</div>
+    <div class="s2col">
+      <div class="scol-l">
+        <div class="s-tag"><i class="fas fa-filter"></i> Step 2 — Signal Preprocessing</div>
+        <h2>Cleaning the <span class="c">Brain Signal</span></h2>
+        <p>Four stages clean and normalise the raw EEG before it enters the deep learning engine.</p>
+        <div id="pipeSteps">
+          <div class="ps" id="ps1"><div class="ps-dot"></div><div class="ps-txt"><strong>Band-pass Filtering  0.5–50 Hz</strong><span>4th-order Butterworth · remove drift, HF noise & DC offset</span></div><i class="fas fa-check ps-chk"></i></div>
+          <div class="ps" id="ps2"><div class="ps-dot"></div><div class="ps-txt"><strong>Artifact Removal — ICA Correction</strong><span>Independent Component Analysis · eye blinks & muscle artifacts removed</span></div><i class="fas fa-check ps-chk"></i></div>
+          <div class="ps" id="ps3"><div class="ps-dot"></div><div class="ps-txt"><strong>Segmentation — 2–5 s Epochs</strong><span>Sliding window · 50% overlap · 37 clean epochs extracted</span></div><i class="fas fa-check ps-chk"></i></div>
+          <div class="ps" id="ps4"><div class="ps-dot"></div><div class="ps-txt"><strong>Normalization — Z-score per Channel</strong><span>Zero-mean, unit-variance · per-channel standardisation</span></div><i class="fas fa-check ps-chk"></i></div>
+        </div>
+      </div>
+      <div class="scol-r">
+        <div class="filter-compare">
+          <div class="fcp"><div class="fcp-lbl bad"><i class="fas fa-times-circle"></i> Before — noisy raw signal</div><canvas id="beforeCvs" height="80"></canvas></div>
+          <div class="fcp-arrow"><i class="fas fa-arrow-down"></i> Band-pass 0.5–50 Hz + ICA artifact removal applied</div>
+          <div class="fcp"><div class="fcp-lbl good"><i class="fas fa-check-circle"></i> After — clean filtered signal</div><canvas id="afterCvs" height="80"></canvas></div>
+        </div>
+        <div class="epoch-box">
+          <div class="eb-hdr">Epoch Segmentation — 2s windows · red = rejected</div>
+          <div class="epoch-track" id="epochTrack"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 3 FREQUENCY ── -->
+  <div class="step" id="step-3">
+    <div class="step-badge">STEP 3 / 9</div>
+    <div class="s2col">
+      <div class="scol-l">
+        <div class="s-tag"><i class="fas fa-wave-square"></i> Step 3 — Frequency Band Analysis</div>
+        <h2>Decomposing into <span class="c">Brain Rhythms</span></h2>
+        <p>Welch's method produces the Power Spectral Density. Theta elevation + Beta reduction is the primary ADHD biomarker.</p>
+        <div id="bands">
+          <div class="band" id="b-delta"><div class="bd-s" style="background:#818cf8"></div><div class="bd-i"><div class="bd-n">δ Delta <span>0.5–4 Hz</span></div><div class="bd-b"><div class="bd-f" id="bdf-delta" style="background:#818cf8"></div></div><div class="bd-note">Neutral in ADHD</div></div><div class="bd-v" id="bdv-delta">—</div></div>
+          <div class="band hl-band" id="b-theta"><div class="bd-s" style="background:#f59e0b"></div><div class="bd-i"><div class="bd-n">θ Theta <span>4–8 Hz</span></div><div class="bd-b"><div class="bd-f" id="bdf-theta" style="background:#f59e0b"></div></div><div class="bd-note warn">↑ ELEVATED in ADHD ⚠</div></div><div class="bd-v warn" id="bdv-theta">—</div></div>
+          <div class="band" id="b-alpha"><div class="bd-s" style="background:#10b981"></div><div class="bd-i"><div class="bd-n">α Alpha <span>8–13 Hz</span></div><div class="bd-b"><div class="bd-f" id="bdf-alpha" style="background:#10b981"></div></div><div class="bd-note info">↓ Reduced</div></div><div class="bd-v" id="bdv-alpha">—</div></div>
+          <div class="band hl-band2" id="b-beta"><div class="bd-s" style="background:#00d4ff"></div><div class="bd-i"><div class="bd-n">β Beta <span>13–30 Hz</span></div><div class="bd-b"><div class="bd-f" id="bdf-beta" style="background:#00d4ff"></div></div><div class="bd-note info">↓ REDUCED in ADHD ⚠</div></div><div class="bd-v" id="bdv-beta">—</div></div>
+          <div class="band" id="b-gamma"><div class="bd-s" style="background:#a78bfa"></div><div class="bd-i"><div class="bd-n">γ Gamma <span>30–40 Hz</span></div><div class="bd-b"><div class="bd-f" id="bdf-gamma" style="background:#a78bfa"></div></div><div class="bd-note">Variable</div></div><div class="bd-v" id="bdv-gamma">—</div></div>
+        </div>
+      </div>
+      <div class="scol-r">
+        <div class="chart-card">
+          <div class="cc-hdr">Power Spectral Density — Welch method (Fz channel)</div>
+          <canvas id="psdChart" height="200"></canvas>
+        </div>
+        <div class="tbr-card">
+          <div class="tbr-big" id="tbrNum">—</div>
+          <div class="tbr-info">
+            <div class="tbr-lbl">Theta / Beta Ratio</div>
+            <div class="tbr-thr"><div class="thr-line"></div><span>Clinical threshold: 3.0</span></div>
+            <p id="tbrNote">Computing…</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 4 FEATURES ── -->
+  <div class="step" id="step-4">
+    <div class="step-badge">STEP 4 / 9</div>
+    <div class="s2col">
+      <div class="scol-l">
+        <div class="s-tag"><i class="fas fa-chart-bar"></i> Step 4 — Feature Extraction</div>
+        <h2>Building the <span class="c">42-Dimensional Vector</span></h2>
+        <p>42 neuroscientific features are extracted from every epoch and aggregated — forming the input to the AI classifier.</p>
+        <div id="fGroups">
+          <div class="fg" id="fg1"><div class="fg-hdr" style="--c:#f59e0b"><i class="fas fa-circle"></i>Band Powers — 5 bands <span>→ 10 features</span></div><div class="fg-chips" id="fgc1"></div></div>
+          <div class="fg" id="fg2"><div class="fg-hdr" style="--c:#ef4444"><i class="fas fa-circle"></i>Theta/Beta Ratio <span>→ 2 features</span></div><div class="fg-chips" id="fgc2"></div></div>
+          <div class="fg" id="fg3"><div class="fg-hdr" style="--c:#7c3aed"><i class="fas fa-circle"></i>Frontal Asymmetry (α θ β) <span>→ 9 features</span></div><div class="fg-chips" id="fgc3"></div></div>
+          <div class="fg" id="fg4"><div class="fg-hdr" style="--c:#10b981"><i class="fas fa-circle"></i>Hjorth Parameters + Sample Entropy <span>→ 12 features</span></div><div class="fg-chips" id="fgc4"></div></div>
+          <div class="fg" id="fg5"><div class="fg-hdr" style="--c:#06b6d4"><i class="fas fa-circle"></i>Inter-channel Coherence <span>→ 9 features</span></div><div class="fg-chips" id="fgc5"></div></div>
+        </div>
+        <div class="feat-total"><span id="ftNum">0</span> / 42 features extracted</div>
+      </div>
+      <div class="scol-r">
+        <div class="chart-card">
+          <div class="cc-hdr">Feature Vector [42 × 1] — colour = value magnitude</div>
+          <div id="fvHeatmap" class="fv-heatmap"></div>
+        </div>
+        <div class="chart-card" style="margin-top:.65rem">
+          <div class="cc-hdr">Top Feature Magnitudes</div>
+          <canvas id="featChart" height="185"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 5 AI MODEL ── -->
+  <div class="step" id="step-5">
+    <div class="step-badge">STEP 5 / 9</div>
+    <div class="s2col">
+      <div class="scol-l">
+        <div class="s-tag"><i class="fas fa-microchip"></i> Step 5 — Deep Learning Engine</div>
+        <h2>CNN <span class="c">+</span> TCN<br><span class="c">Architecture</span></h2>
+        <p>A CNN extracts spatial patterns across the 19 EEG channels. The TCN then captures temporal dependencies across epochs before the dense classifier outputs the probability.</p>
+        <div class="model-flow" id="modelFlow">
+          <div class="mf-r"><div class="mf-box inp" id="mfInp"><i class="fas fa-layer-group"></i><b>Input Tensor</b><small>19 ch × T samples × epochs</small></div></div>
+          <div class="mf-arr"><i class="fas fa-arrow-down"></i></div>
+          <div class="mf-r"><div class="mf-box scl" id="mfScl"><i class="fas fa-chart-bar"></i><b>Feature Extraction</b><small>Band power · TBR · Hjorth · entropy</small></div></div>
+          <div class="mf-arr"><i class="fas fa-arrow-down"></i></div>
+          <div class="mf-r"><div class="mf-box rf" id="mfCnn"><i class="fas fa-th"></i><b>CNN Layers</b><small>Spatial Feature Learning</small><div class="mf-p" id="mfPCnn">Conv1D × 3 · MaxPool</div></div></div>
+          <div class="mf-arr"><i class="fas fa-arrow-down"></i></div>
+          <div class="mf-r"><div class="mf-box xgb" id="mfTcn"><i class="fas fa-stream"></i><b>TCN Layers</b><small>Temporal Pattern Recognition</small><div class="mf-p" id="mfPTcn">Dilated causal conv</div></div></div>
+          <div class="mf-arr"><i class="fas fa-arrow-down"></i></div>
+          <div class="mf-r"><div class="mf-box vote" id="mfDense"><i class="fas fa-project-diagram"></i><b>Dense + Softmax</b><small>FC → dropout → output</small><div class="mf-p" id="mfPDense">P = —</div></div></div>
+          <div class="mf-arr"><i class="fas fa-arrow-down"></i></div>
+          <div class="mf-r"><div class="mf-box out" id="mfOut"><i class="fas fa-flag"></i><b id="mfLbl">Predicting…</b><small id="mfConf"></small></div></div>
+        </div>
+      </div>
+      <div class="scol-r">
+        <div class="chart-card">
+          <div class="cc-hdr">CNN Spatial Feature Maps (Fz · Cz · Pz channels)</div>
+          <canvas id="treeCvs" height="200"></canvas>
+        </div>
+        <div class="chart-card" style="margin-top:.65rem">
+          <div class="cc-hdr">ROC Curve — AUC = 0.971</div>
+          <canvas id="rocChart" height="140"></canvas>
+        </div>
+        <div class="cv-box" id="cvBox">
+          <div class="cvr hdr"><span>Metric</span><span>5-fold CV</span></div>
+          <div class="cvr" id="cvAcc"><span>Accuracy</span><span>—</span></div>
+          <div class="cvr" id="cvAUC"><span>AUC-ROC</span><span>—</span></div>
+          <div class="cvr" id="cvSens"><span>Sensitivity</span><span>—</span></div>
+          <div class="cvr" id="cvSpec"><span>Specificity</span><span>—</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 6 PREDICTION ── -->
+  <div class="step" id="step-6">
+    <div class="step-badge">STEP 6 / 9</div>
+    <div class="s2col pred-cols">
+      <div class="scol-l">
+        <div class="s-tag"><i class="fas fa-diagnoses"></i> Step 6 — Prediction Result</div>
+        <div class="gauge-wrap">
+          <canvas id="gaugeCvs" width="300" height="280"></canvas>
+          <div class="gc-center">
+            <div class="gc-pct" id="gcPct">0%</div>
+            <div class="gc-lbl">P(ADHD)</div>
+          </div>
+        </div>
+        <div class="conf-bar-row">
+          <span class="cbr-l">Normal</span>
+          <div class="cbr"><div class="cbr-n" id="cbrN"></div><div class="cbr-a" id="cbrA"></div></div>
+          <span class="cbr-r">ADHD</span>
+        </div>
+        <div class="conf-vals"><span id="cvrN">—</span> vs <span id="cvrA">—</span></div>
+      </div>
+      <div class="scol-r">
+        <h2>CNN + TCN <span class="c">Decision</span></h2>
+        <p>The deep learning model outputs a calibrated probability. This patient's EEG strongly matches the ADHD spatiotemporal pattern.</p>
+        <div class="verdict" id="verdict">
+          <div class="vd-icon" id="vdIcon"><i class="fas fa-hourglass-half"></i></div>
+          <div><div class="vd-lbl" id="vdLbl">Analysing…</div><div class="vd-sub" id="vdSub">model is processing</div></div>
+        </div>
+        <div class="bms">
+          <div class="bm" id="bm1"><i class="fas fa-arrow-up" style="color:#f59e0b"></i> Frontal θ: <b>8.5 µV²/Hz</b> — elevated</div>
+          <div class="bm" id="bm2"><i class="fas fa-arrow-down" style="color:#60a5fa"></i> Central β: <b>1.8 µV²/Hz</b> — reduced</div>
+          <div class="bm" id="bm3"><i class="fas fa-exclamation-triangle" style="color:#ef4444"></i> TBR = <b>4.72</b> (threshold 3.0) — ADHD marker</div>
+          <div class="bm" id="bm4"><i class="fas fa-not-equal" style="color:#a78bfa"></i> Frontal Asymmetry: <b>0.38</b> — altered</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 7 ATTENTION HEATMAP ── -->
+  <div class="step" id="step-7">
+    <div class="step-badge">STEP 7 / 9</div>
+    <div class="s2col">
+      <div class="scol-l">
+        <div class="s-tag"><i class="fas fa-map"></i> Step 7 — Attention Heatmap</div>
+        <h2>Which brain regions<br>drove <span class="c">ADHD</span> detection?</h2>
+        <p>The TCN's attention weights reveal <strong>which time-points and channels</strong> the model focused on. High attention (red) marks the most diagnostically relevant EEG activity.</p>
+        <div class="shap-eq">
+          <div class="seq-box base"><div class="sv">Frontal</div><div class="sl">θ dominant</div></div>
+          <span class="seq-op">+</span>
+          <div class="seq-box pos"><div class="sv">Central</div><div class="sl">β suppressed</div></div>
+          <span class="seq-op">=</span>
+          <div class="seq-box res"><div class="sv">ADHD</div><div class="sl">Pattern</div></div>
+        </div>
+        <!-- attention weight list -->
+        <div class="attn-legend">
+          <div class="al-row"><span class="al-dot" style="background:#ef4444"></span><span>Very High attention (&gt; 0.7)</span></div>
+          <div class="al-row"><span class="al-dot" style="background:#f59e0b"></span><span>High attention (0.4 – 0.7)</span></div>
+          <div class="al-row"><span class="al-dot" style="background:#3b82f6"></span><span>Low attention (&lt; 0.4)</span></div>
+        </div>
+        <div id="shapList"></div>
+      </div>
+      <div class="scol-r">
+        <div class="chart-card">
+          <div class="cc-hdr">TCN Attention Weights — channel × time heatmap</div>
+          <canvas id="shapChart" height="260"></canvas>
+        </div>
+        <div class="chart-card" style="margin-top:.65rem">
+          <div class="cc-hdr">Top Channels by Mean Attention</div>
+          <canvas id="attnBarChart" height="140"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 8 BRAIN MAP ── -->
+  <div class="step" id="step-8">
+    <div class="step-badge">STEP 8 / 9</div>
+    <div class="s2col">
+      <div class="scol-l">
+        <div class="s-tag"><i class="fas fa-brain"></i> Step 8 — Topographic Brain Map</div>
+        <h2>Spatial <span class="c">Power Distribution</span></h2>
+        <p>Colour-coded scalp map shows where elevated theta power originates. Frontal regions glow red — the hallmark of ADHD.</p>
+        <div class="topo-pattern">
+          <div class="tp-r"><span class="tpd" style="background:#ef4444"></span>Frontal (Fp1/2, Fz, F3/4): <b>High theta</b></div>
+          <div class="tp-r"><span class="tpd" style="background:#f59e0b"></span>Central (Cz, C3/4): <b>Moderate</b></div>
+          <div class="tp-r"><span class="tpd" style="background:#3b82f6"></span>Occipital (O1/2): <b>Normal</b></div>
+        </div>
+        <div class="band-sw" id="bandSw">
+          <span>Band:</span>
+          <button class="bsw active" data-band="theta">θ Theta</button>
+          <button class="bsw" data-band="alpha">α Alpha</button>
+          <button class="bsw" data-band="beta">β Beta</button>
+        </div>
+        <div class="topo-leg">
+          <span>Low</span>
+          <div class="tl-grad"></div>
+          <span>High power</span>
+        </div>
+      </div>
+      <div class="scol-r topo-r">
+        <svg id="topoSVG" viewBox="0 0 400 400" width="340" height="340"></svg>
+        <div class="topo-bl" id="topoBl">θ Theta Power (4–8 Hz)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 9 SUMMARY ── -->
+  <div class="step" id="step-9">
+    <div class="step-badge">STEP 9 / 9</div>
+    <div class="sum-wrap">
+      <div class="s-tag center"><i class="fas fa-file-medical"></i> Analysis Complete</div>
+      <h2 class="center">Full Pipeline <span class="c">Summary</span></h2>
+      <div class="sum-grid">
+        <div class="sc" id="sc1"><i class="fas fa-diagnoses"></i><div class="sc-l">Prediction</div><div class="sc-v red">ADHD</div><div class="sc-s">87.3% probability</div></div>
+        <div class="sc" id="sc2"><i class="fas fa-wave-square"></i><div class="sc-l">TBR</div><div class="sc-v">4.72</div><div class="sc-s">threshold 3.0 ⚠</div></div>
+        <div class="sc" id="sc3"><i class="fas fa-brain"></i><div class="sc-l">Frontal θ</div><div class="sc-v">8.5 µV²</div><div class="sc-s">↑ 2.7× normal</div></div>
+        <div class="sc" id="sc4"><i class="fas fa-bullseye"></i><div class="sc-l">Accuracy</div><div class="sc-v">94.7%</div><div class="sc-s">5-fold CV</div></div>
+        <div class="sc" id="sc5"><i class="fas fa-map"></i><div class="sc-l">Top Attn</div><div class="sc-v sm">Frontal Fz/F3</div><div class="sc-s">Attn = 0.91</div></div>
+        <div class="sc" id="sc6"><i class="fas fa-microchip"></i><div class="sc-l">Model</div><div class="sc-v sm">CNN+TCN</div><div class="sc-s">Spatial+Temporal</div></div>
+      </div>
+      <div class="sum-pipe">
+        <div class="sps done"><i class="fas fa-check"></i>Load .mat</div><div class="spa">→</div>
+        <div class="sps done"><i class="fas fa-check"></i>Filter</div><div class="spa">→</div>
+        <div class="sps done"><i class="fas fa-check"></i>Artefacts</div><div class="spa">→</div>
+        <div class="sps done"><i class="fas fa-check"></i>Epochs</div><div class="spa">→</div>
+        <div class="sps done"><i class="fas fa-check"></i>42 Features</div><div class="spa">→</div>
+        <div class="sps done"><i class="fas fa-th"></i>CNN Spatial</div><div class="spa">→</div>
+        <div class="sps done"><i class="fas fa-stream"></i>TCN Temporal</div><div class="spa">→</div>
+        <div class="sps adhd"><i class="fas fa-flag"></i>ADHD 87%</div><div class="spa">→</div>
+        <div class="sps done"><i class="fas fa-map"></i>Attn Map</div>
+      </div>
+      <div class="sum-acts">
+        <a href="dashboard.html" class="sa primary"><i class="fas fa-chart-line"></i> Live Dashboard</a>
+        <button class="sa secondary" onclick="Demo.goTo(0)"><i class="fas fa-redo"></i> Replay</button>
+        <a href="index.html" class="sa ghost"><i class="fas fa-home"></i> Home</a>
+      </div>
+      <p class="disclaimer"><i class="fas fa-info-circle"></i> Research prototype — not for clinical diagnosis.</p>
+    </div>
+  </div>
+
+</main>
+
+<!-- ══ VIDEO TIMELINE ══ -->
+<footer class="vp-timeline">
+  <div class="vt-track">
+    <div class="vt-fill" id="vtFill"></div>
+    <div class="vt-dots" id="vtDots"></div>
+  </div>
+  <div class="vt-labels" id="vtLabels"></div>
+</footer>
+
+<script src="js/demo.js"></script>
+</body>
+</html>

@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NeuroADHD — Analysis Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <link rel="stylesheet" href="css/dashboard.css" />
+</head>
+<body class="dash-body">
+
+<!-- ═══════════════════════ TOPBAR -->
+<header class="dash-topbar">
+  <a href="index.html" class="dash-brand">
+    <i class="fas fa-brain"></i>
+    <span>Neuro<b>ADHD</b></span>
+  </a>
+  <div class="dash-topbar-center">
+    <div class="status-indicator" id="backendStatus">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusText">Connecting to backend…</span>
+    </div>
+  </div>
+  <div class="dash-topbar-right">
+    <button class="btn-icon" id="demoBtn" title="Load Demo Data">
+      <i class="fas fa-play-circle"></i> Demo
+    </button>
+    <button class="btn-icon" id="resetBtn" title="Reset Dashboard">
+      <i class="fas fa-redo"></i> Reset
+    </button>
+    <a href="index.html" class="btn-icon">
+      <i class="fas fa-home"></i>
+    </a>
+  </div>
+</header>
+
+<!-- ═══════════════════════ MAIN LAYOUT -->
+<div class="dash-layout">
+
+  <!-- ──── SIDEBAR ──── -->
+  <aside class="dash-sidebar">
+    <nav class="sidebar-nav">
+      <a href="#sec-upload" class="sidebar-link active" data-section="upload">
+        <i class="fas fa-upload"></i><span>Upload EEG</span>
+      </a>
+      <a href="#sec-signals" class="sidebar-link" data-section="signals">
+        <i class="fas fa-wave-square"></i><span>EEG Signals</span>
+      </a>
+      <a href="#sec-bands" class="sidebar-link" data-section="bands">
+        <i class="fas fa-chart-bar"></i><span>Band Power</span>
+      </a>
+      <a href="#sec-brainmap" class="sidebar-link" data-section="brainmap">
+        <i class="fas fa-brain"></i><span>Brain Map</span>
+      </a>
+      <a href="#sec-pipeline" class="sidebar-link" data-section="pipeline">
+        <i class="fas fa-cogs"></i><span>Pipeline</span>
+      </a>
+      <a href="#sec-prediction" class="sidebar-link" data-section="prediction">
+        <i class="fas fa-diagnoses"></i><span>Prediction</span>
+      </a>
+      <a href="#sec-shap" class="sidebar-link" data-section="shap">
+        <i class="fas fa-lightbulb"></i><span>Explainability</span>
+      </a>
+      <a href="#sec-report" class="sidebar-link" data-section="report">
+        <i class="fas fa-file-medical"></i><span>Report</span>
+      </a>
+    </nav>
+    <div class="sidebar-info">
+      <div class="sinfo-label">Dataset Info</div>
+      <div class="sinfo-row"><span>File:</span><span id="infoFile">—</span></div>
+      <div class="sinfo-row"><span>Channels:</span><span id="infoChannels">—</span></div>
+      <div class="sinfo-row"><span>Sample Rate:</span><span id="infoSrate">—</span></div>
+      <div class="sinfo-row"><span>Duration:</span><span id="infoDuration">—</span></div>
+      <div class="sinfo-row"><span>Epochs:</span><span id="infoEpochs">—</span></div>
+    </div>
+  </aside>
+
+  <!-- ──── CONTENT ──── -->
+  <main class="dash-content">
+
+    <!-- ═══ UPLOAD SECTION ═══ -->
+    <section class="dash-section" id="sec-upload">
+      <div class="section-title"><i class="fas fa-upload"></i> Upload EEG Data</div>
+      <div class="upload-zone" id="uploadZone">
+        <div class="upload-inner">
+          <div class="upload-icon"><i class="fas fa-file-medical-alt"></i></div>
+          <h3>Drag &amp; Drop your <code>.mat</code> EEG file here</h3>
+          <p>Supports MATLAB .mat files from EEG machines, EEGLAB exports, or the IEEE ADHD dataset.</p>
+          <input type="file" id="fileInput" accept=".mat,.edf,.csv" hidden />
+          <button class="btn-primary" onclick="document.getElementById('fileInput').click()">
+            <i class="fas fa-folder-open"></i> Browse File
+          </button>
+          <div class="upload-formats">
+            <span class="format-badge">.mat</span>
+            <span class="format-badge">.edf</span>
+            <span class="format-badge">.csv</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upload Progress -->
+      <div class="upload-progress hidden" id="uploadProgress">
+        <div class="progress-steps">
+          <div class="prog-step active" id="progLoad">
+            <div class="prog-icon"><i class="fas fa-file-import"></i></div>
+            <span>Loading File</span>
+          </div>
+          <div class="prog-connector" id="conn1"></div>
+          <div class="prog-step" id="progFilter">
+            <div class="prog-icon"><i class="fas fa-filter"></i></div>
+            <span>Filtering</span>
+          </div>
+          <div class="prog-connector" id="conn2"></div>
+          <div class="prog-step" id="progArtifact">
+            <div class="prog-icon"><i class="fas fa-eraser"></i></div>
+            <span>Artifact Removal</span>
+          </div>
+          <div class="prog-connector" id="conn3"></div>
+          <div class="prog-step" id="progFeatures">
+            <div class="prog-icon"><i class="fas fa-chart-bar"></i></div>
+            <span>Feature Extraction</span>
+          </div>
+          <div class="prog-connector" id="conn4"></div>
+          <div class="prog-step" id="progPredict">
+            <div class="prog-icon"><i class="fas fa-robot"></i></div>
+            <span>AI Prediction</span>
+          </div>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill" id="progBarFill"></div>
+        </div>
+        <div class="progress-msg" id="progMsg">Initializing…</div>
+      </div>
+
+      <!-- Alerts -->
+      <div id="alertBox" class="alert hidden"></div>
+    </section>
+
+    <!-- ═══ EEG SIGNAL SECTION ═══ -->
+    <section class="dash-section" id="sec-signals">
+      <div class="section-title"><i class="fas fa-wave-square"></i> Raw EEG Signals</div>
+      <div class="signal-controls">
+        <div class="ctrl-group">
+          <label>Channels:</label>
+          <select id="channelSelect" multiple size="4"></select>
+        </div>
+        <div class="ctrl-group">
+          <label>Time Window: <span id="windowLabel">4s</span></label>
+          <input type="range" id="windowSlider" min="2" max="30" value="4" step="1" />
+        </div>
+        <div class="ctrl-group">
+          <label>Amplitude Scale: <span id="scaleLabel">1×</span></label>
+          <input type="range" id="scaleSlider" min="1" max="10" value="3" step="1" />
+        </div>
+        <button class="btn-small" id="playSignalBtn"><i class="fas fa-play"></i> Animate</button>
+      </div>
+      <div class="chart-container tall">
+        <canvas id="eegChart"></canvas>
+      </div>
+      <div class="channel-legend" id="channelLegend"></div>
+    </section>
+
+    <!-- ═══ BAND POWER SECTION ═══ -->
+    <section class="dash-section" id="sec-bands">
+      <div class="section-title"><i class="fas fa-chart-bar"></i> Frequency Band Power Analysis</div>
+      <div class="bands-grid">
+        <div class="band-panel">
+          <div class="band-panel-header">Absolute Band Power (µV²/Hz)</div>
+          <div class="chart-container">
+            <canvas id="bandPowerChart"></canvas>
+          </div>
+        </div>
+        <div class="band-panel">
+          <div class="band-panel-header">Relative Band Power (%)</div>
+          <div class="chart-container">
+            <canvas id="relBandChart"></canvas>
+          </div>
+        </div>
+        <div class="band-panel">
+          <div class="band-panel-header">Theta/Beta Ratio per Channel</div>
+          <div class="chart-container">
+            <canvas id="tbrChart"></canvas>
+          </div>
+        </div>
+        <div class="band-panel">
+          <div class="band-panel-header">Power Spectral Density (Welch)</div>
+          <div class="chart-container">
+            <canvas id="psdChart"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="tbr-summary">
+        <div class="tbr-card" id="tbrCard">
+          <div class="tbr-val" id="tbrValue">—</div>
+          <div class="tbr-label">Avg Theta/Beta Ratio</div>
+          <div class="tbr-note" id="tbrNote">—</div>
+        </div>
+        <div class="band-summary-table">
+          <table id="bandTable">
+            <thead>
+              <tr><th>Band</th><th>Range</th><th>Abs Power</th><th>Rel Power</th><th>ADHD Direction</th></tr>
+            </thead>
+            <tbody id="bandTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ BRAIN MAP SECTION ═══ -->
+    <section class="dash-section" id="sec-brainmap">
+      <div class="section-title"><i class="fas fa-brain"></i> Topographic Brain Map</div>
+      <div class="brainmap-layout">
+        <div class="brainmap-controls">
+          <label>Frequency Band:</label>
+          <div class="band-selector">
+            <button class="band-btn active" data-band="theta">θ Theta</button>
+            <button class="band-btn" data-band="alpha">α Alpha</button>
+            <button class="band-btn" data-band="beta">β Beta</button>
+            <button class="band-btn" data-band="delta">δ Delta</button>
+            <button class="band-btn" data-band="gamma">γ Gamma</button>
+          </div>
+          <label style="margin-top:1rem">Metric:</label>
+          <select id="mapMetric">
+            <option value="power">Absolute Power</option>
+            <option value="relative">Relative Power</option>
+            <option value="tbr">Theta/Beta Ratio</option>
+          </select>
+        </div>
+        <div class="brainmap-wrap">
+          <div id="topoMap"></div>
+          <div class="colorbar-wrap">
+            <div class="colorbar" id="colorbar"></div>
+            <div class="colorbar-labels">
+              <span id="cbMin">Low</span>
+              <span id="cbMid">Mid</span>
+              <span id="cbMax">High</span>
+            </div>
+          </div>
+        </div>
+        <div class="brainmap-channels" id="channelList"></div>
+      </div>
+    </section>
+
+    <!-- ═══ PIPELINE VISUALIZATION ═══ -->
+    <section class="dash-section" id="sec-pipeline">
+      <div class="section-title"><i class="fas fa-cogs"></i> Processing Pipeline Status</div>
+      <div class="pipeline-viz" id="pipelineViz">
+        <div class="pviz-step" id="pviz1">
+          <div class="pviz-icon pending"><i class="fas fa-file-code"></i></div>
+          <div class="pviz-label">Load .mat</div>
+          <div class="pviz-status" id="pvizStatus1">Waiting</div>
+          <div class="pviz-detail" id="pvizDetail1"></div>
+        </div>
+        <div class="pviz-arrow"><i class="fas fa-chevron-right"></i></div>
+        <div class="pviz-step" id="pviz2">
+          <div class="pviz-icon pending"><i class="fas fa-filter"></i></div>
+          <div class="pviz-label">Bandpass Filter</div>
+          <div class="pviz-status" id="pvizStatus2">Waiting</div>
+          <div class="pviz-detail" id="pvizDetail2"></div>
+        </div>
+        <div class="pviz-arrow"><i class="fas fa-chevron-right"></i></div>
+        <div class="pviz-step" id="pviz3">
+          <div class="pviz-icon pending"><i class="fas fa-eraser"></i></div>
+          <div class="pviz-label">Artifact Removal</div>
+          <div class="pviz-status" id="pvizStatus3">Waiting</div>
+          <div class="pviz-detail" id="pvizDetail3"></div>
+        </div>
+        <div class="pviz-arrow"><i class="fas fa-chevron-right"></i></div>
+        <div class="pviz-step" id="pviz4">
+          <div class="pviz-icon pending"><i class="fas fa-cut"></i></div>
+          <div class="pviz-label">Epoching</div>
+          <div class="pviz-status" id="pvizStatus4">Waiting</div>
+          <div class="pviz-detail" id="pvizDetail4"></div>
+        </div>
+        <div class="pviz-arrow"><i class="fas fa-chevron-right"></i></div>
+        <div class="pviz-step" id="pviz5">
+          <div class="pviz-icon pending"><i class="fas fa-chart-bar"></i></div>
+          <div class="pviz-label">Features</div>
+          <div class="pviz-status" id="pvizStatus5">Waiting</div>
+          <div class="pviz-detail" id="pvizDetail5"></div>
+        </div>
+        <div class="pviz-arrow"><i class="fas fa-chevron-right"></i></div>
+        <div class="pviz-step" id="pviz6">
+          <div class="pviz-icon pending"><i class="fas fa-robot"></i></div>
+          <div class="pviz-label">ML Model</div>
+          <div class="pviz-status" id="pvizStatus6">Waiting</div>
+          <div class="pviz-detail" id="pvizDetail6"></div>
+        </div>
+      </div>
+      <div class="pipeline-log" id="pipelineLog">
+        <div class="log-header"><i class="fas fa-terminal"></i> Processing Log</div>
+        <div class="log-body" id="logBody">
+          <div class="log-entry info">System ready. Upload a .mat file or run demo to begin.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ PREDICTION SECTION ═══ -->
+    <section class="dash-section" id="sec-prediction">
+      <div class="section-title"><i class="fas fa-diagnoses"></i> ADHD Prediction Result</div>
+      <div class="prediction-layout">
+        <div class="pred-main">
+          <div class="pred-gauge-wrap">
+            <canvas id="gaugeChart" width="280" height="280"></canvas>
+            <div class="gauge-label-center" id="gaugeLabelCenter">
+              <div class="gauge-pct" id="gaugePct">—</div>
+              <div class="gauge-verdict" id="gaugeVerdict">Awaiting data</div>
+            </div>
+          </div>
+          <div class="pred-verdict-card" id="verdictCard">
+            <div class="verdict-icon" id="verdictIcon"><i class="fas fa-hourglass-half"></i></div>
+            <div class="verdict-text">
+              <div class="verdict-label" id="verdictLabel">No prediction yet</div>
+              <div class="verdict-sublabel" id="verdictSublabel">Upload EEG data or run demo to see results.</div>
+            </div>
+          </div>
+        </div>
+        <div class="pred-details">
+          <div class="pred-detail-card">
+            <div class="pd-header"><i class="fas fa-chart-pie"></i> Confidence Breakdown</div>
+            <div class="chart-container small">
+              <canvas id="confidenceChart"></canvas>
+            </div>
+          </div>
+          <div class="pred-detail-card">
+            <div class="pd-header"><i class="fas fa-list-ul"></i> Key Indicators</div>
+            <div class="indicators-list" id="indicatorsList">
+              <div class="ind-item"><i class="fas fa-clock"></i> Awaiting analysis…</div>
+            </div>
+          </div>
+          <div class="pred-detail-card">
+            <div class="pd-header"><i class="fas fa-info-circle"></i> Model Info</div>
+            <div class="model-info-list" id="modelInfoList">
+              <div class="minfo-row"><span>Algorithm</span><span id="miAlgo">—</span></div>
+              <div class="minfo-row"><span>Accuracy</span><span id="miAccuracy">—</span></div>
+              <div class="minfo-row"><span>AUC-ROC</span><span id="miAUC">—</span></div>
+              <div class="minfo-row"><span>Features Used</span><span id="miFeatures">—</span></div>
+              <div class="minfo-row"><span>Validation</span><span id="miValidation">—</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ SHAP EXPLAINABILITY SECTION ═══ -->
+    <section class="dash-section" id="sec-shap">
+      <div class="section-title"><i class="fas fa-lightbulb"></i> Explainable AI — SHAP Analysis</div>
+      <div class="shap-tabs">
+        <button class="shap-tab active" data-tab="waterfall">Waterfall Chart</button>
+        <button class="shap-tab" data-tab="bar">Feature Bar</button>
+        <button class="shap-tab" data-tab="force">Force Plot</button>
+      </div>
+      <div class="shap-content">
+        <div class="shap-panel active" id="shap-waterfall">
+          <div class="chart-container tall">
+            <canvas id="shapWaterfallChart"></canvas>
+          </div>
+        </div>
+        <div class="shap-panel" id="shap-bar">
+          <div class="chart-container tall">
+            <canvas id="shapBarChart"></canvas>
+          </div>
+        </div>
+        <div class="shap-panel" id="shap-force">
+          <div id="shapForcePlot" class="force-plot-container"></div>
+        </div>
+      </div>
+      <div class="shap-interpretation" id="shapInterpretation">
+        <div class="interp-header"><i class="fas fa-comment-medical"></i> Clinical Interpretation</div>
+        <div class="interp-body" id="interpBody">
+          Run the analysis to generate SHAP values and clinical interpretation.
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ REPORT SECTION ═══ -->
+    <section class="dash-section" id="sec-report">
+      <div class="section-title"><i class="fas fa-file-medical"></i> Analysis Report</div>
+      <div class="report-wrap" id="reportWrap">
+        <div class="report-placeholder" id="reportPlaceholder">
+          <i class="fas fa-file-alt"></i>
+          <p>Complete analysis will generate a full clinical report here. Upload EEG data and run the prediction first.</p>
+        </div>
+        <div class="report-content hidden" id="reportContent">
+          <div class="report-header-section">
+            <div class="report-logo"><i class="fas fa-brain"></i> NeuroADHD System</div>
+            <div class="report-meta">
+              <div>Report Date: <span id="rDate">—</span></div>
+              <div>File: <span id="rFile">—</span></div>
+              <div>Analysis ID: <span id="rID">—</span></div>
+            </div>
+          </div>
+          <div class="report-body" id="reportBody"></div>
+          <div class="report-actions">
+            <button class="btn-primary" id="printReportBtn"><i class="fas fa-print"></i> Print Report</button>
+            <button class="btn-outline" id="downloadReportBtn"><i class="fas fa-download"></i> Download JSON</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div><!-- end dash-layout -->
+
+<!-- Loading overlay -->
+<div class="loading-overlay hidden" id="loadingOverlay">
+  <div class="loading-spinner">
+    <div class="spinner-brain"><i class="fas fa-brain fa-spin"></i></div>
+    <div class="spinner-text" id="spinnerText">Processing EEG data…</div>
+    <div class="spinner-sub" id="spinnerSub">This may take a moment</div>
+  </div>
+</div>
+
+<script src="js/eeg-viz.js"></script>
+<script src="js/brain-map.js"></script>
+<script src="js/dashboard.js"></script>
+</body>
+</html>

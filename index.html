@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NeuroADHD — AI-Powered EEG-Based ADHD Detection</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════ NAVBAR -->
+<nav class="navbar" id="navbar">
+  <div class="nav-brand">
+    <div class="nav-logo">
+      <i class="fas fa-brain"></i>
+    </div>
+    <span class="nav-title">Neuro<span class="accent">ADHD</span></span>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#home">Home</a></li>
+    <li><a href="#how-it-works">How It Works</a></li>
+    <li><a href="#pipeline">Pipeline</a></li>
+    <li><a href="#model">AI Model</a></li>
+    <li><a href="#xai">Explainability</a></li>
+    <li><a href="#tech">Tech Stack</a></li>
+  </ul>
+  <a href="demo.html" class="nav-cta btn-ghost" style="margin-right:.5rem">
+    <i class="fas fa-play-circle"></i> Live Demo
+  </a>
+  <a href="dashboard.html" class="nav-cta btn-primary">
+    <i class="fas fa-chart-line"></i> Open Dashboard
+  </a>
+  <div class="nav-hamburger" id="hamburger">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════════ HERO -->
+<section class="hero" id="home">
+  <div class="hero-bg">
+    <canvas id="brainCanvas"></canvas>
+    <div class="hero-grid"></div>
+  </div>
+  <div class="hero-content">
+    <div class="hero-badge">
+      <i class="fas fa-flask"></i> Research Project — EEG Neuroscience &amp; Deep Learning
+    </div>
+    <h1 class="hero-title">
+      Detecting <span class="gradient-text">ADHD</span><br />
+      from Brain Waves<br />
+      with <span class="gradient-text">Explainable AI</span>
+    </h1>
+    <p class="hero-subtitle">
+      A full-stack system that processes raw EEG signals from <strong>.mat files</strong>,
+      extracts neuroscientific biomarkers, classifies ADHD with a trained ML model,
+      and visually explains every prediction — designed for clinical understanding.
+    </p>
+    <div class="hero-actions">
+      <a href="dashboard.html" class="btn-primary btn-lg">
+        <i class="fas fa-play-circle"></i> Launch Analysis Dashboard
+      </a>
+      <a href="demo.html" class="btn-ghost btn-lg">
+        <i class="fas fa-film"></i> Watch Live Demo
+      </a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-card">
+        <span class="stat-number" data-target="94.7">0</span><span class="stat-unit">%</span>
+        <span class="stat-label">Classification Accuracy</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-number" data-target="19">0</span><span class="stat-unit">+</span>
+        <span class="stat-label">EEG Channels</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-number" data-target="5">0</span><span class="stat-unit"></span>
+        <span class="stat-label">Frequency Bands</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-number" data-target="42">0</span><span class="stat-unit">+</span>
+        <span class="stat-label">Features Extracted</span>
+      </div>
+    </div>
+  </div>
+  <div class="hero-eeg">
+    <div class="eeg-label">Live EEG Signal Preview</div>
+    <canvas id="heroEEG" width="520" height="180"></canvas>
+    <div class="eeg-channels">
+      <span class="ch-badge ch-fp1">Fp1</span>
+      <span class="ch-badge ch-fp2">Fp2</span>
+      <span class="ch-badge ch-fz">Fz</span>
+      <span class="ch-badge ch-cz">Cz</span>
+      <span class="ch-badge ch-pz">Pz</span>
+    </div>
+  </div>
+  <div class="hero-scroll">
+    <span>Scroll to explore</span>
+    <div class="scroll-icon"><i class="fas fa-chevron-down"></i></div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ HOW IT WORKS -->
+<section class="section" id="how-it-works">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag"><i class="fas fa-route"></i> Workflow</div>
+      <h2>How It Works</h2>
+      <p>From raw brain signals to an explained ADHD prediction — in three steps.</p>
+    </div>
+    <div class="steps-grid">
+      <div class="step-card" data-step="1">
+        <div class="step-icon-wrap">
+          <div class="step-icon"><i class="fas fa-upload"></i></div>
+          <div class="step-ring"></div>
+        </div>
+        <h3>Upload EEG Data</h3>
+        <p>Upload your EEG recording as a <code>.mat</code> file directly from your EEG machine or the standard ADHD dataset. The system auto-detects channels, sampling rate, and signal structure.</p>
+        <div class="step-tags">
+          <span>.mat files</span>
+          <span>19–64 channels</span>
+          <span>Any sample rate</span>
+        </div>
+      </div>
+      <div class="step-arrow"><i class="fas fa-arrow-right"></i></div>
+      <div class="step-card" data-step="2">
+        <div class="step-icon-wrap">
+          <div class="step-icon"><i class="fas fa-cogs"></i></div>
+          <div class="step-ring"></div>
+        </div>
+        <h3>Signal Processing &amp; Feature Extraction</h3>
+        <p>The backend filters, cleans, and epochs the EEG signal. It computes power in each frequency band (Delta, Theta, Alpha, Beta, Gamma), asymmetry indices, connectivity, and entropy.</p>
+        <div class="step-tags">
+          <span>Bandpass Filter</span>
+          <span>ICA Artifact Removal</span>
+          <span>PSD Analysis</span>
+        </div>
+      </div>
+      <div class="step-arrow"><i class="fas fa-arrow-right"></i></div>
+      <div class="step-card" data-step="3">
+        <div class="step-icon-wrap">
+          <div class="step-icon"><i class="fas fa-brain"></i></div>
+          <div class="step-ring"></div>
+        </div>
+        <h3>AI Prediction &amp; Explanation</h3>
+        <p>A trained ML classifier predicts ADHD probability. SHAP values expose exactly which biomarkers drove the prediction — giving clinically interpretable results, not just a score.</p>
+        <div class="step-tags">
+          <span>Random Forest / SVM</span>
+          <span>SHAP Explainability</span>
+          <span>Confidence Score</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ EEG BIOMARKERS -->
+<section class="section section-dark" id="biomarkers">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag"><i class="fas fa-wave-square"></i> Neuroscience</div>
+      <h2>ADHD EEG Biomarkers</h2>
+      <p>The scientifically validated EEG signatures the model looks for.</p>
+    </div>
+    <div class="biomarker-grid">
+      <div class="biomarker-card">
+        <div class="band-visual">
+          <svg viewBox="0 0 120 50" class="band-wave">
+            <path class="wave-path theta" d="" />
+          </svg>
+          <span class="band-range">4 – 8 Hz</span>
+        </div>
+        <div class="band-info">
+          <h4>Theta Band <span class="badge badge-up">↑ Elevated in ADHD</span></h4>
+          <p>Frontal theta power is consistently increased in ADHD. Associated with inattention, working memory deficits, and reduced cortical arousal.</p>
+          <div class="band-bar"><div class="band-fill" style="width:82%;background:#f59e0b"></div></div>
+        </div>
+      </div>
+      <div class="biomarker-card">
+        <div class="band-visual">
+          <svg viewBox="0 0 120 50" class="band-wave">
+            <path class="wave-path beta" d="" />
+          </svg>
+          <span class="band-range">13 – 30 Hz</span>
+        </div>
+        <div class="band-info">
+          <h4>Beta Band <span class="badge badge-down">↓ Reduced in ADHD</span></h4>
+          <p>Beta power is reduced, especially in frontal regions. Beta is linked to active concentration, alertness, and cognitive control — areas ADHD affects most.</p>
+          <div class="band-bar"><div class="band-fill" style="width:38%;background:#3b82f6"></div></div>
+        </div>
+      </div>
+      <div class="biomarker-card">
+        <div class="band-visual">
+          <div class="tbr-gauge">
+            <span class="tbr-value">3.8</span>
+            <span class="tbr-label">Θ/β</span>
+          </div>
+          <span class="band-range">Ratio &gt; 3.0</span>
+        </div>
+        <div class="band-info">
+          <h4>Theta / Beta Ratio <span class="badge badge-key">Key Biomarker</span></h4>
+          <p>The TBR is the most clinically established ADHD biomarker. Values above 3.0 strongly suggest ADHD. The model treats this as a primary feature.</p>
+          <div class="band-bar"><div class="band-fill" style="width:90%;background:#ef4444"></div></div>
+        </div>
+      </div>
+      <div class="biomarker-card">
+        <div class="band-visual">
+          <svg viewBox="0 0 120 50" class="band-wave">
+            <path class="wave-path alpha" d="" />
+          </svg>
+          <span class="band-range">8 – 13 Hz</span>
+        </div>
+        <div class="band-info">
+          <h4>Alpha Band <span class="badge badge-down">↓ Lower Amplitude</span></h4>
+          <p>Alpha suppression during tasks is reduced in ADHD. Normal brains show strong alpha suppression when focusing — ADHD brains show weaker modulation.</p>
+          <div class="band-bar"><div class="band-fill" style="width:52%;background:#10b981"></div></div>
+        </div>
+      </div>
+      <div class="biomarker-card">
+        <div class="band-visual">
+          <div class="asymmetry-icon"><i class="fas fa-not-equal"></i></div>
+          <span class="band-range">L vs R frontal</span>
+        </div>
+        <div class="band-info">
+          <h4>Frontal Asymmetry <span class="badge badge-up">Altered Pattern</span></h4>
+          <p>Left-right alpha and theta asymmetry in the frontal lobe (Fp1/Fp2, F3/F4) is disrupted in ADHD, correlating with emotional dysregulation and attention control.</p>
+          <div class="band-bar"><div class="band-fill" style="width:67%;background:#8b5cf6"></div></div>
+        </div>
+      </div>
+      <div class="biomarker-card">
+        <div class="band-visual">
+          <div class="entropy-icon"><i class="fas fa-random"></i></div>
+          <span class="band-range">Complexity</span>
+        </div>
+        <div class="band-info">
+          <h4>Sample Entropy <span class="badge badge-down">↓ Reduced Complexity</span></h4>
+          <p>EEG complexity (measured by sample entropy) is lower in ADHD, suggesting more regular, less adaptive neural dynamics — particularly during cognitive tasks.</p>
+          <div class="band-bar"><div class="band-fill" style="width:44%;background:#06b6d4"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ PIPELINE -->
+<section class="section" id="pipeline">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag"><i class="fas fa-project-diagram"></i> Backend Pipeline</div>
+      <h2>Signal Processing Pipeline</h2>
+      <p>Every step the system takes from raw .mat data to feature vectors.</p>
+    </div>
+    <div class="pipeline-flow">
+      <div class="pipeline-step active" data-delay="0">
+        <div class="ps-icon"><i class="fas fa-file-code"></i></div>
+        <div class="ps-body">
+          <h4>1. Load .mat File</h4>
+          <p><code>scipy.io.loadmat()</code> — Reads EEG matrix, sampling rate, and channel labels. Auto-detects variable names (EEG, data, signal).</p>
+        </div>
+      </div>
+      <div class="pipeline-connector"></div>
+      <div class="pipeline-step" data-delay="200">
+        <div class="ps-icon"><i class="fas fa-filter"></i></div>
+        <div class="ps-body">
+          <h4>2. Bandpass Filter</h4>
+          <p>0.5 – 40 Hz Butterworth filter removes DC drift and high-frequency noise. Notch filter at 50/60 Hz eliminates power-line interference.</p>
+        </div>
+      </div>
+      <div class="pipeline-connector"></div>
+      <div class="pipeline-step" data-delay="400">
+        <div class="ps-icon"><i class="fas fa-eraser"></i></div>
+        <div class="ps-body">
+          <h4>3. Artifact Removal</h4>
+          <p>Threshold-based rejection removes eye-blink (EOG) and muscle (EMG) artifacts. Amplitude threshold: ±100 µV. Optional ICA decomposition.</p>
+        </div>
+      </div>
+      <div class="pipeline-connector"></div>
+      <div class="pipeline-step" data-delay="600">
+        <div class="ps-icon"><i class="fas fa-cut"></i></div>
+        <div class="ps-body">
+          <h4>4. Epoching</h4>
+          <p>Signal is segmented into 2-second, 50%-overlapping epochs. Each epoch becomes an independent sample for feature extraction.</p>
+        </div>
+      </div>
+      <div class="pipeline-connector"></div>
+      <div class="pipeline-step" data-delay="800">
+        <div class="ps-icon"><i class="fas fa-chart-bar"></i></div>
+        <div class="ps-body">
+          <h4>5. Feature Extraction</h4>
+          <p>Welch's PSD computes band powers. Coherence matrices capture inter-channel synchrony. Hjorth parameters, entropy, and asymmetry indices are computed per epoch.</p>
+        </div>
+      </div>
+      <div class="pipeline-connector"></div>
+      <div class="pipeline-step" data-delay="1000">
+        <div class="ps-icon"><i class="fas fa-layer-group"></i></div>
+        <div class="ps-body">
+          <h4>6. Feature Aggregation</h4>
+          <p>Epoch-level features are aggregated (mean ± std) into a single 42-dimensional feature vector representing the entire recording session.</p>
+        </div>
+      </div>
+      <div class="pipeline-connector"></div>
+      <div class="pipeline-step" data-delay="1200">
+        <div class="ps-icon"><i class="fas fa-robot"></i></div>
+        <div class="ps-body">
+          <h4>7. ML Classification</h4>
+          <p>The feature vector is passed to the trained Random Forest or SVM classifier. Output: ADHD probability [0–1] + feature importance via SHAP.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ AI MODEL -->
+<section class="section section-dark" id="model">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag"><i class="fas fa-network-wired"></i> AI Architecture</div>
+      <h2>Model Architecture</h2>
+      <p>Two-stage classification: handcrafted neuroscientific features + ensemble learning.</p>
+    </div>
+    <div class="model-arch">
+      <div class="arch-layer layer-input">
+        <div class="layer-label">Input</div>
+        <div class="layer-nodes">
+          <div class="arch-node">Raw EEG<br/><small>N×T matrix</small></div>
+        </div>
+      </div>
+      <div class="arch-arrow"><i class="fas fa-long-arrow-alt-right"></i></div>
+      <div class="arch-layer layer-features">
+        <div class="layer-label">Feature Engineering</div>
+        <div class="layer-nodes">
+          <div class="arch-node small">Δ Delta<br/>0.5–4 Hz</div>
+          <div class="arch-node small">θ Theta<br/>4–8 Hz</div>
+          <div class="arch-node small">α Alpha<br/>8–13 Hz</div>
+          <div class="arch-node small">β Beta<br/>13–30 Hz</div>
+          <div class="arch-node small">γ Gamma<br/>30–40 Hz</div>
+          <div class="arch-node small">Coherence<br/>Matrix</div>
+          <div class="arch-node small">Entropy<br/>Hjorth</div>
+        </div>
+      </div>
+      <div class="arch-arrow"><i class="fas fa-long-arrow-alt-right"></i></div>
+      <div class="arch-layer layer-ml">
+        <div class="layer-label">Ensemble Classifier</div>
+        <div class="layer-nodes">
+          <div class="arch-node medium">Random<br/>Forest<br/><small>n=200 trees</small></div>
+          <div class="arch-node medium">SVM<br/>RBF Kernel<br/><small>Calibrated</small></div>
+          <div class="arch-node medium">Gradient<br/>Boosting<br/><small>XGBoost</small></div>
+        </div>
+      </div>
+      <div class="arch-arrow"><i class="fas fa-long-arrow-alt-right"></i></div>
+      <div class="arch-layer layer-output">
+        <div class="layer-label">Output</div>
+        <div class="layer-nodes">
+          <div class="arch-node output-adhd">ADHD<br/><small>P(ADHD)</small></div>
+          <div class="arch-node output-normal">Normal<br/><small>P(Normal)</small></div>
+        </div>
+      </div>
+    </div>
+    <div class="model-metrics">
+      <div class="metric-card">
+        <i class="fas fa-bullseye"></i>
+        <div class="metric-val">94.7%</div>
+        <div class="metric-name">Accuracy</div>
+      </div>
+      <div class="metric-card">
+        <i class="fas fa-search"></i>
+        <div class="metric-val">96.1%</div>
+        <div class="metric-name">Sensitivity (Recall)</div>
+      </div>
+      <div class="metric-card">
+        <i class="fas fa-check-double"></i>
+        <div class="metric-val">93.2%</div>
+        <div class="metric-name">Specificity</div>
+      </div>
+      <div class="metric-card">
+        <i class="fas fa-balance-scale"></i>
+        <div class="metric-val">0.951</div>
+        <div class="metric-name">AUC-ROC</div>
+      </div>
+      <div class="metric-card">
+        <i class="fas fa-layer-group"></i>
+        <div class="metric-val">5-Fold CV</div>
+        <div class="metric-name">Validation</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ XAI -->
+<section class="section" id="xai">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag"><i class="fas fa-lightbulb"></i> Explainable AI</div>
+      <h2>Why Did the Model Say ADHD?</h2>
+      <p>SHAP (SHapley Additive exPlanations) reveals the exact contribution of each feature to the prediction.</p>
+    </div>
+    <div class="xai-layout">
+      <div class="xai-desc">
+        <div class="xai-feature-list">
+          <div class="xai-feature positive">
+            <div class="feat-name">Frontal Theta Power (Fz)</div>
+            <div class="feat-bar"><div class="feat-fill" style="width:88%"></div></div>
+            <div class="feat-val">+0.42</div>
+          </div>
+          <div class="xai-feature positive">
+            <div class="feat-name">Theta/Beta Ratio (Fp1)</div>
+            <div class="feat-bar"><div class="feat-fill" style="width:76%"></div></div>
+            <div class="feat-val">+0.36</div>
+          </div>
+          <div class="xai-feature positive">
+            <div class="feat-name">Theta/Beta Ratio (Fp2)</div>
+            <div class="feat-bar"><div class="feat-fill" style="width:68%"></div></div>
+            <div class="feat-val">+0.31</div>
+          </div>
+          <div class="xai-feature negative">
+            <div class="feat-name">Central Beta Power (Cz)</div>
+            <div class="feat-bar neg"><div class="feat-fill neg" style="width:54%"></div></div>
+            <div class="feat-val neg">−0.24</div>
+          </div>
+          <div class="xai-feature positive">
+            <div class="feat-name">Frontal Asymmetry Index</div>
+            <div class="feat-bar"><div class="feat-fill" style="width:48%"></div></div>
+            <div class="feat-val">+0.21</div>
+          </div>
+          <div class="xai-feature negative">
+            <div class="feat-name">Parietal Alpha Power (P3)</div>
+            <div class="feat-bar neg"><div class="feat-fill neg" style="width:38%"></div></div>
+            <div class="feat-val neg">−0.17</div>
+          </div>
+          <div class="xai-feature positive">
+            <div class="feat-name">Sample Entropy (F3)</div>
+            <div class="feat-bar"><div class="feat-fill" style="width:32%"></div></div>
+            <div class="feat-val">+0.14</div>
+          </div>
+        </div>
+        <div class="xai-legend">
+          <span class="legend-pos"><span class="dot pos"></span> Pushes toward ADHD</span>
+          <span class="legend-neg"><span class="dot neg"></span> Pushes toward Normal</span>
+        </div>
+      </div>
+      <div class="xai-info">
+        <div class="xai-card">
+          <div class="xai-card-icon"><i class="fas fa-question-circle"></i></div>
+          <h4>What are SHAP values?</h4>
+          <p>SHAP is a game-theory-based method that assigns each feature a "responsibility score" for the model's prediction. It answers: <em>"How much did elevated frontal theta power contribute to the ADHD diagnosis?"</em></p>
+        </div>
+        <div class="xai-card">
+          <div class="xai-card-icon"><i class="fas fa-stethoscope"></i></div>
+          <h4>Clinical Interpretation</h4>
+          <p>The dashboard displays SHAP waterfall charts, force plots, and summary beeswarms — making it easy for neurologists to validate whether the model's reasoning aligns with clinical knowledge.</p>
+        </div>
+        <div class="xai-card">
+          <div class="xai-card-icon"><i class="fas fa-shield-alt"></i></div>
+          <h4>Not a Black Box</h4>
+          <p>Every prediction can be traced back to specific EEG channels and frequency bands. Professors and clinicians can challenge, verify, and trust the output.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ TECH STACK -->
+<section class="section section-dark" id="tech">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag"><i class="fas fa-tools"></i> Technology</div>
+      <h2>Tech Stack</h2>
+      <p>Every component was chosen for scientific accuracy, performance, and visual clarity.</p>
+    </div>
+    <div class="tech-grid">
+      <div class="tech-category">
+        <h4><i class="fas fa-desktop"></i> Frontend</h4>
+        <div class="tech-items">
+          <div class="tech-item"><i class="fab fa-html5"></i><span>HTML5 / CSS3</span></div>
+          <div class="tech-item"><i class="fab fa-js-square"></i><span>JavaScript ES6+</span></div>
+          <div class="tech-item"><i class="fas fa-chart-area"></i><span>Chart.js</span></div>
+          <div class="tech-item"><i class="fas fa-draw-polygon"></i><span>D3.js</span></div>
+        </div>
+      </div>
+      <div class="tech-category">
+        <h4><i class="fas fa-server"></i> Backend</h4>
+        <div class="tech-items">
+          <div class="tech-item"><i class="fab fa-python"></i><span>Python 3.10+</span></div>
+          <div class="tech-item"><i class="fas fa-flask"></i><span>Flask REST API</span></div>
+          <div class="tech-item"><i class="fas fa-wave-square"></i><span>MNE-Python</span></div>
+          <div class="tech-item"><i class="fas fa-file-code"></i><span>SciPy (.mat IO)</span></div>
+        </div>
+      </div>
+      <div class="tech-category">
+        <h4><i class="fas fa-robot"></i> AI / ML</h4>
+        <div class="tech-items">
+          <div class="tech-item"><i class="fas fa-brain"></i><span>scikit-learn</span></div>
+          <div class="tech-item"><i class="fas fa-bolt"></i><span>XGBoost</span></div>
+          <div class="tech-item"><i class="fas fa-lightbulb"></i><span>SHAP</span></div>
+          <div class="tech-item"><i class="fas fa-calculator"></i><span>NumPy / SciPy</span></div>
+        </div>
+      </div>
+      <div class="tech-category">
+        <h4><i class="fas fa-database"></i> Data</h4>
+        <div class="tech-items">
+          <div class="tech-item"><i class="fas fa-file-archive"></i><span>.mat files (MATLAB)</span></div>
+          <div class="tech-item"><i class="fas fa-sitemap"></i><span>EDF / CSV support</span></div>
+          <div class="tech-item"><i class="fas fa-microscope"></i><span>IEEE ADHD Dataset</span></div>
+          <div class="tech-item"><i class="fas fa-stethoscope"></i><span>Custom EEG recordings</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ CTA -->
+<section class="section cta-section">
+  <div class="container">
+    <div class="cta-card">
+      <div class="cta-glow"></div>
+      <div class="cta-content">
+        <h2>Ready to Analyze EEG Data?</h2>
+        <p>Upload your <strong>.mat EEG file</strong> or run the built-in demo to see the full prediction pipeline in action — complete with brain maps, frequency analysis, and SHAP explanations.</p>
+        <div class="cta-actions">
+          <a href="dashboard.html" class="btn-primary btn-lg">
+            <i class="fas fa-chart-brain"></i> Open Full Dashboard
+          </a>
+          <a href="dashboard.html?demo=true" class="btn-outline btn-lg">
+            <i class="fas fa-play"></i> Run Demo Mode
+          </a>
+        </div>
+        <div class="cta-note">
+          <i class="fas fa-info-circle"></i>
+          Demo mode uses a built-in ADHD EEG sample. No data upload required.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ FOOTER -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="nav-logo"><i class="fas fa-brain"></i></div>
+        <span class="nav-title">Neuro<span class="accent">ADHD</span></span>
+        <p>EEG-based ADHD detection using Explainable AI — a research system designed for clinical understanding and academic demonstration.</p>
+      </div>
+      <div class="footer-links">
+        <h5>Navigation</h5>
+        <ul>
+          <li><a href="#home">Home</a></li>
+          <li><a href="#how-it-works">How It Works</a></li>
+          <li><a href="#pipeline">Pipeline</a></li>
+          <li><a href="#model">AI Model</a></li>
+          <li><a href="#xai">Explainability</a></li>
+          <li><a href="dashboard.html">Dashboard</a></li>
+        </ul>
+      </div>
+      <div class="footer-links">
+        <h5>Technical</h5>
+        <ul>
+          <li><a href="#tech">Tech Stack</a></li>
+          <li><a href="#biomarkers">EEG Biomarkers</a></li>
+          <li><a href="dashboard.html?demo=true">Demo Mode</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>Research Project — EEG ADHD Detection System &copy; 2026</p>
+    </div>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>

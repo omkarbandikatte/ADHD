@@ -1,0 +1,6 @@
+backend/
+.dist/
+*.pyc
+__pycache__/
+*.egg-info/
+.env
