@@ -180,7 +180,7 @@
           </div>
         </div>
         <div class="band-panel">
-          <div class="band-panel-header">Theta/Beta Ratio per Channel</div>
+          <div class="band-panel-header">Theta/Beta Ratio per Channel <span style="font-size:0.7rem;color:#64748b;font-weight:400">(informational only — not a primary classifier feature)</span></div>
           <div class="chart-container">
             <canvas id="tbrChart"></canvas>
           </div>
@@ -193,10 +193,10 @@
         </div>
       </div>
       <div class="tbr-summary">
-        <div class="tbr-card" id="tbrCard">
+        <div class="tbr-card" id="tbrCard" style="opacity:0.6">
           <div class="tbr-val" id="tbrValue">—</div>
           <div class="tbr-label">Avg Theta/Beta Ratio</div>
-          <div class="tbr-note" id="tbrNote">—</div>
+          <div class="tbr-note" id="tbrNote" style="font-size:0.7rem;color:#64748b">(Informational — not used in classification)</div>
         </div>
         <div class="band-summary-table">
           <table id="bandTable">
@@ -226,7 +226,7 @@
           <select id="mapMetric">
             <option value="power">Absolute Power</option>
             <option value="relative">Relative Power</option>
-            <option value="tbr">Theta/Beta Ratio</option>
+            <option value="tbr">Theta/Beta Ratio (Informational)</option>
           </select>
         </div>
         <div class="brainmap-wrap">
@@ -252,42 +252,42 @@
           <div class="pviz-icon pending"><i class="fas fa-file-code"></i></div>
           <div class="pviz-label">Load .mat</div>
           <div class="pviz-status" id="pvizStatus1">Waiting</div>
-          <div class="pviz-detail" id="pvizDetail1"></div>
+          <div class="pviz-detail" id="pvizDetail1">121 patients · 19-ch · IEEE DataPort</div>
         </div>
         <div class="pviz-arrow"><i class="fas fa-chevron-right"></i></div>
         <div class="pviz-step" id="pviz2">
           <div class="pviz-icon pending"><i class="fas fa-filter"></i></div>
           <div class="pviz-label">Bandpass Filter</div>
           <div class="pviz-status" id="pvizStatus2">Waiting</div>
-          <div class="pviz-detail" id="pvizDetail2"></div>
+          <div class="pviz-detail" id="pvizDetail2">Remove noise · 50/60 Hz notch</div>
         </div>
         <div class="pviz-arrow"><i class="fas fa-chevron-right"></i></div>
         <div class="pviz-step" id="pviz3">
           <div class="pviz-icon pending"><i class="fas fa-eraser"></i></div>
-          <div class="pviz-label">Artifact Removal</div>
+          <div class="pviz-label">ICA Artifact Removal</div>
           <div class="pviz-status" id="pvizStatus3">Waiting</div>
-          <div class="pviz-detail" id="pvizDetail3"></div>
+          <div class="pviz-detail" id="pvizDetail3">EOG / EMG removal</div>
         </div>
         <div class="pviz-arrow"><i class="fas fa-chevron-right"></i></div>
         <div class="pviz-step" id="pviz4">
           <div class="pviz-icon pending"><i class="fas fa-cut"></i></div>
-          <div class="pviz-label">Epoching</div>
+          <div class="pviz-label">Segmentation</div>
           <div class="pviz-status" id="pvizStatus4">Waiting</div>
-          <div class="pviz-detail" id="pvizDetail4"></div>
+          <div class="pviz-detail" id="pvizDetail4">Fixed-length windows</div>
         </div>
         <div class="pviz-arrow"><i class="fas fa-chevron-right"></i></div>
         <div class="pviz-step" id="pviz5">
           <div class="pviz-icon pending"><i class="fas fa-chart-bar"></i></div>
-          <div class="pviz-label">Features</div>
+          <div class="pviz-label">PSD Features</div>
           <div class="pviz-status" id="pvizStatus5">Waiting</div>
-          <div class="pviz-detail" id="pvizDetail5"></div>
+          <div class="pviz-detail" id="pvizDetail5">5 bands × 19 channels</div>
         </div>
         <div class="pviz-arrow"><i class="fas fa-chevron-right"></i></div>
         <div class="pviz-step" id="pviz6">
-          <div class="pviz-icon pending"><i class="fas fa-robot"></i></div>
-          <div class="pviz-label">ML Model</div>
+          <div class="pviz-icon pending"><i class="fas fa-microchip"></i></div>
+          <div class="pviz-label">CNN + TCN Model</div>
           <div class="pviz-status" id="pvizStatus6">Waiting</div>
-          <div class="pviz-detail" id="pvizDetail6"></div>
+          <div class="pviz-detail" id="pvizDetail6">Spatial + Temporal learning</div>
         </div>
       </div>
       <div class="pipeline-log" id="pipelineLog">
@@ -334,11 +334,11 @@
           <div class="pred-detail-card">
             <div class="pd-header"><i class="fas fa-info-circle"></i> Model Info</div>
             <div class="model-info-list" id="modelInfoList">
-              <div class="minfo-row"><span>Algorithm</span><span id="miAlgo">—</span></div>
-              <div class="minfo-row"><span>Accuracy</span><span id="miAccuracy">—</span></div>
-              <div class="minfo-row"><span>AUC-ROC</span><span id="miAUC">—</span></div>
-              <div class="minfo-row"><span>Features Used</span><span id="miFeatures">—</span></div>
-              <div class="minfo-row"><span>Validation</span><span id="miValidation">—</span></div>
+              <div class="minfo-row"><span>Algorithm</span><span id="miAlgo">CNN + TCN</span></div>
+              <div class="minfo-row"><span>Architecture</span><span id="miAccuracy">Spatial + Temporal</span></div>
+              <div class="minfo-row"><span>Features</span><span id="miAUC">PSD (19 channels)</span></div>
+              <div class="minfo-row"><span>Features Used</span><span id="miFeatures">5 bands × 19 channels</span></div>
+              <div class="minfo-row"><span>Dataset</span><span id="miValidation">IEEE DataPort · 121 patients</span></div>
             </div>
           </div>
         </div>
@@ -371,7 +371,7 @@
       <div class="shap-interpretation" id="shapInterpretation">
         <div class="interp-header"><i class="fas fa-comment-medical"></i> Clinical Interpretation</div>
         <div class="interp-body" id="interpBody">
-          Run the analysis to generate SHAP values and clinical interpretation.
+          Run the analysis to generate clinical band-level explanation and per-subject spectral deviation analysis relative to normative control reference.
         </div>
       </div>
     </section>

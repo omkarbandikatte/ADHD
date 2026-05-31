@@ -24,6 +24,7 @@
     <li><a href="#pipeline">Pipeline</a></li>
     <li><a href="#model">AI Model</a></li>
     <li><a href="#xai">Explainability</a></li>
+    <li><a href="#dataset">Dataset</a></li>
     <li><a href="#tech">Tech Stack</a></li>
   </ul>
   <a href="demo.html" class="nav-cta btn-ghost" style="margin-right:.5rem">
@@ -53,9 +54,9 @@
       with <span class="gradient-text">Explainable AI</span>
     </h1>
     <p class="hero-subtitle">
-      A full-stack system that processes raw EEG signals from <strong>.mat files</strong>,
-      extracts neuroscientific biomarkers, classifies ADHD with a trained ML model,
-      and visually explains every prediction — designed for clinical understanding.
+      A deep learning framework that processes raw EEG signals from <strong>121 patients</strong> (IEEE DataPort · 19-channel .mat format),
+      extracts Power Spectral Density biomarkers, classifies ADHD using a CNN + TCN deep learning model,
+      and generates per-subject clinical band-level explanations — designed for clinical interpretability.
     </p>
     <div class="hero-actions">
       <a href="dashboard.html" class="btn-primary btn-lg">
@@ -67,11 +68,11 @@
     </div>
     <div class="hero-stats">
       <div class="stat-card">
-        <span class="stat-number" data-target="94.7">0</span><span class="stat-unit">%</span>
-        <span class="stat-label">Classification Accuracy</span>
+        <span class="stat-number" data-target="121">0</span><span class="stat-unit"></span>
+        <span class="stat-label">Patients (IEEE DataPort)</span>
       </div>
       <div class="stat-card">
-        <span class="stat-number" data-target="19">0</span><span class="stat-unit">+</span>
+        <span class="stat-number" data-target="19">0</span><span class="stat-unit"></span>
         <span class="stat-label">EEG Channels</span>
       </div>
       <div class="stat-card">
@@ -79,8 +80,8 @@
         <span class="stat-label">Frequency Bands</span>
       </div>
       <div class="stat-card">
-        <span class="stat-number" data-target="42">0</span><span class="stat-unit">+</span>
-        <span class="stat-label">Features Extracted</span>
+        <span class="stat-number" data-target="4">0</span><span class="stat-unit"></span>
+        <span class="stat-label">Pipeline Stages</span>
       </div>
     </div>
   </div>
@@ -130,11 +131,11 @@
           <div class="step-ring"></div>
         </div>
         <h3>Signal Processing &amp; Feature Extraction</h3>
-        <p>The backend filters, cleans, and epochs the EEG signal. It computes power in each frequency band (Delta, Theta, Alpha, Beta, Gamma), asymmetry indices, connectivity, and entropy.</p>
+        <p>The backend applies a bandpass filter, ICA artifact removal, and signal segmentation. Power Spectral Density (PSD) is computed per frequency band (Delta, Theta, Alpha, Beta, Gamma) across all 19 channels.</p>
         <div class="step-tags">
           <span>Bandpass Filter</span>
           <span>ICA Artifact Removal</span>
-          <span>PSD Analysis</span>
+          <span>PSD Feature Extraction</span>
         </div>
       </div>
       <div class="step-arrow"><i class="fas fa-arrow-right"></i></div>
@@ -143,11 +144,11 @@
           <div class="step-icon"><i class="fas fa-brain"></i></div>
           <div class="step-ring"></div>
         </div>
-        <h3>AI Prediction &amp; Explanation</h3>
-        <p>A trained ML classifier predicts ADHD probability. SHAP values expose exactly which biomarkers drove the prediction — giving clinically interpretable results, not just a score.</p>
+        <h3>Deep Learning Prediction &amp; Clinical Explanation</h3>
+        <p>A CNN + TCN deep learning model classifies ADHD. The explainability component identifies which EEG frequency bands and electrode regions drove the decision — giving per-subject clinical explanations with confidence scores.</p>
         <div class="step-tags">
-          <span>Random Forest / SVM</span>
-          <span>SHAP Explainability</span>
+          <span>CNN + TCN Model</span>
+          <span>Band-Level Explanation</span>
           <span>Confidence Score</span>
         </div>
       </div>
@@ -185,9 +186,9 @@
           <span class="band-range">13 – 30 Hz</span>
         </div>
         <div class="band-info">
-          <h4>Beta Band <span class="badge badge-down">↓ Reduced in ADHD</span></h4>
-          <p>Beta power is reduced, especially in frontal regions. Beta is linked to active concentration, alertness, and cognitive control — areas ADHD affects most.</p>
-          <div class="band-bar"><div class="band-fill" style="width:38%;background:#3b82f6"></div></div>
+          <h4>Beta Band <span class="badge badge-up">↑ Elevated in ADHD</span></h4>
+          <p>Contrary to classical assumptions, clinical results show elevated frontal, central, occipital, and temporal beta activity in ADHD subjects relative to the normative reference in this dataset.</p>
+          <div class="band-bar"><div class="band-fill" style="width:68%;background:#3b82f6"></div></div>
         </div>
       </div>
       <div class="biomarker-card">
@@ -199,9 +200,9 @@
           <span class="band-range">Ratio &gt; 3.0</span>
         </div>
         <div class="band-info">
-          <h4>Theta / Beta Ratio <span class="badge badge-key">Key Biomarker</span></h4>
-          <p>The TBR is the most clinically established ADHD biomarker. Values above 3.0 strongly suggest ADHD. The model treats this as a primary feature.</p>
-          <div class="band-bar"><div class="band-fill" style="width:90%;background:#ef4444"></div></div>
+          <h4>Theta / Beta Ratio <span class="badge" style="background:rgba(100,116,139,0.2);color:#94a3b8">Informational</span></h4>
+          <p>TBR is a historically referenced metric but is not used as a primary classification feature in this system. PSD band powers across all 19 channels are used instead for more robust spatial analysis.</p>
+          <div class="band-bar"><div class="band-fill" style="width:35%;background:#64748b"></div></div>
         </div>
       </div>
       <div class="biomarker-card">
@@ -212,9 +213,9 @@
           <span class="band-range">8 – 13 Hz</span>
         </div>
         <div class="band-info">
-          <h4>Alpha Band <span class="badge badge-down">↓ Lower Amplitude</span></h4>
-          <p>Alpha suppression during tasks is reduced in ADHD. Normal brains show strong alpha suppression when focusing — ADHD brains show weaker modulation.</p>
-          <div class="band-bar"><div class="band-fill" style="width:52%;background:#10b981"></div></div>
+          <h4>Alpha Band <span class="badge badge-up">↑ Elevated in ADHD</span></h4>
+          <p>Per the clinical prediction results, ADHD subjects show elevated frontal, central, parietal, occipital, and temporal alpha activity relative to the normative control reference — a key spatial biomarker in this framework.</p>
+          <div class="band-bar"><div class="band-fill" style="width:72%;background:#10b981"></div></div>
         </div>
       </div>
       <div class="biomarker-card">
@@ -256,55 +257,55 @@
         <div class="ps-icon"><i class="fas fa-file-code"></i></div>
         <div class="ps-body">
           <h4>1. Load .mat File</h4>
-          <p><code>scipy.io.loadmat()</code> — Reads EEG matrix, sampling rate, and channel labels. Auto-detects variable names (EEG, data, signal).</p>
+          <p><code>scipy.io.loadmat()</code> — Reads 19-channel EEG matrix from the IEEE DataPort dataset (121 patients). Auto-detects variable names, sampling rate, and electrode labels.</p>
         </div>
       </div>
       <div class="pipeline-connector"></div>
       <div class="pipeline-step" data-delay="200">
         <div class="ps-icon"><i class="fas fa-filter"></i></div>
         <div class="ps-body">
-          <h4>2. Bandpass Filter</h4>
-          <p>0.5 – 40 Hz Butterworth filter removes DC drift and high-frequency noise. Notch filter at 50/60 Hz eliminates power-line interference.</p>
+          <h4>2. Bandpass Filtering</h4>
+          <p>Butterworth bandpass filter removes noise and focuses on meaningful brainwave bands. Filter equation: <code>y[n] = Σ bₖ·x[n−k] − Σ aⱼ·y[n−j]</code>. Notch filter at 50/60 Hz eliminates powerline interference.</p>
         </div>
       </div>
       <div class="pipeline-connector"></div>
       <div class="pipeline-step" data-delay="400">
         <div class="ps-icon"><i class="fas fa-eraser"></i></div>
         <div class="ps-body">
-          <h4>3. Artifact Removal</h4>
-          <p>Threshold-based rejection removes eye-blink (EOG) and muscle (EMG) artifacts. Amplitude threshold: ±100 µV. Optional ICA decomposition.</p>
+          <h4>3. ICA Artifact Removal</h4>
+          <p>Independent Component Analysis (ICA) separates statistically independent sources from the mixed EEG. Removes eye-blink (EOG) and muscle (EMG) artifacts, isolating brain activity from different cortical regions.</p>
         </div>
       </div>
       <div class="pipeline-connector"></div>
       <div class="pipeline-step" data-delay="600">
         <div class="ps-icon"><i class="fas fa-cut"></i></div>
         <div class="ps-body">
-          <h4>4. Epoching</h4>
-          <p>Signal is segmented into 2-second, 50%-overlapping epochs. Each epoch becomes an independent sample for feature extraction.</p>
+          <h4>4. Segmentation</h4>
+          <p>The cleaned EEG signal is segmented around specific events into fixed-length windows. These segments serve as the input units for downstream feature extraction and model training.</p>
         </div>
       </div>
       <div class="pipeline-connector"></div>
       <div class="pipeline-step" data-delay="800">
         <div class="ps-icon"><i class="fas fa-chart-bar"></i></div>
         <div class="ps-body">
-          <h4>5. Feature Extraction</h4>
-          <p>Welch's PSD computes band powers. Coherence matrices capture inter-channel synchrony. Hjorth parameters, entropy, and asymmetry indices are computed per epoch.</p>
+          <h4>5. PSD Feature Extraction</h4>
+          <p>Power Spectral Density computed via: <code>PSD(f) = (1/(fₛ·N)) · |Σ x[n]·e^(−j2πfn/fₛ)|&sup2;</code>. Captures signal power distribution across Delta, Theta, Alpha, Beta, and Gamma bands for all 19 channels.</p>
         </div>
       </div>
       <div class="pipeline-connector"></div>
       <div class="pipeline-step" data-delay="1000">
-        <div class="ps-icon"><i class="fas fa-layer-group"></i></div>
+        <div class="ps-icon"><i class="fas fa-microchip"></i></div>
         <div class="ps-body">
-          <h4>6. Feature Aggregation</h4>
-          <p>Epoch-level features are aggregated (mean ± std) into a single 42-dimensional feature vector representing the entire recording session.</p>
+          <h4>6. CNN + TCN Deep Learning</h4>
+          <p>CNN layer extracts spatial electrode patterns: <code>yᵏᵢⱼ = f(ΣₘΣₙ wᵏₘ,ₙ · xᵢ₊ₘ,ⱼ₊ₙ + bᵏ)</code>. TCN layer captures long-range temporal dependencies using dilated causal convolutions with dilation d = 1, 2, 4, 8…</p>
         </div>
       </div>
       <div class="pipeline-connector"></div>
       <div class="pipeline-step" data-delay="1200">
-        <div class="ps-icon"><i class="fas fa-robot"></i></div>
+        <div class="ps-icon"><i class="fas fa-comment-medical"></i></div>
         <div class="ps-body">
-          <h4>7. ML Classification</h4>
-          <p>The feature vector is passed to the trained Random Forest or SVM classifier. Output: ADHD probability [0–1] + feature importance via SHAP.</p>
+          <h4>7. Clinical Explainability Output</h4>
+          <p>Softmax classification head outputs ADHD / Non-ADHD prediction with a confidence score. The explainability component identifies abnormal spectral patterns per subject — elevated/reduced activity per cortical region relative to a normative control reference.</p>
         </div>
       </div>
     </div>
@@ -317,35 +318,34 @@
     <div class="section-header">
       <div class="section-tag"><i class="fas fa-network-wired"></i> AI Architecture</div>
       <h2>Model Architecture</h2>
-      <p>Two-stage classification: handcrafted neuroscientific features + ensemble learning.</p>
+      <p>End-to-end CNN + TCN deep learning pipeline combining spatial and temporal EEG feature learning.</p>
     </div>
     <div class="model-arch">
       <div class="arch-layer layer-input">
         <div class="layer-label">Input</div>
         <div class="layer-nodes">
-          <div class="arch-node">Raw EEG<br/><small>N×T matrix</small></div>
+          <div class="arch-node">Raw EEG<br/><small>121 patients · 19-ch .mat</small></div>
         </div>
       </div>
       <div class="arch-arrow"><i class="fas fa-long-arrow-alt-right"></i></div>
       <div class="arch-layer layer-features">
-        <div class="layer-label">Feature Engineering</div>
+        <div class="layer-label">PSD Feature Extraction</div>
         <div class="layer-nodes">
-          <div class="arch-node small">Δ Delta<br/>0.5–4 Hz</div>
+          <div class="arch-node small">δ Delta<br/>0.5–4 Hz</div>
           <div class="arch-node small">θ Theta<br/>4–8 Hz</div>
           <div class="arch-node small">α Alpha<br/>8–13 Hz</div>
           <div class="arch-node small">β Beta<br/>13–30 Hz</div>
           <div class="arch-node small">γ Gamma<br/>30–40 Hz</div>
-          <div class="arch-node small">Coherence<br/>Matrix</div>
-          <div class="arch-node small">Entropy<br/>Hjorth</div>
+          <div class="arch-node small">All 19<br/>Channels</div>
         </div>
       </div>
       <div class="arch-arrow"><i class="fas fa-long-arrow-alt-right"></i></div>
       <div class="arch-layer layer-ml">
-        <div class="layer-label">Ensemble Classifier</div>
+        <div class="layer-label">Deep Learning Model</div>
         <div class="layer-nodes">
-          <div class="arch-node medium">Random<br/>Forest<br/><small>n=200 trees</small></div>
-          <div class="arch-node medium">SVM<br/>RBF Kernel<br/><small>Calibrated</small></div>
-          <div class="arch-node medium">Gradient<br/>Boosting<br/><small>XGBoost</small></div>
+          <div class="arch-node medium">CNN Layer<br/><small>Spatial Features<br/>Electrode Patterns</small></div>
+          <div class="arch-node medium">TCN Layer<br/><small>Temporal Context<br/>Dilated Causal Conv</small></div>
+          <div class="arch-node medium">FC + Softmax<br/><small>Classification<br/>Confidence Score</small></div>
         </div>
       </div>
       <div class="arch-arrow"><i class="fas fa-long-arrow-alt-right"></i></div>
@@ -488,21 +488,21 @@
         </div>
       </div>
       <div class="tech-category">
-        <h4><i class="fas fa-robot"></i> AI / ML</h4>
+        <h4><i class="fas fa-robot"></i> AI / Deep Learning</h4>
         <div class="tech-items">
-          <div class="tech-item"><i class="fas fa-brain"></i><span>scikit-learn</span></div>
-          <div class="tech-item"><i class="fas fa-bolt"></i><span>XGBoost</span></div>
-          <div class="tech-item"><i class="fas fa-lightbulb"></i><span>SHAP</span></div>
+          <div class="tech-item"><i class="fas fa-brain"></i><span>CNN (Spatial Features)</span></div>
+          <div class="tech-item"><i class="fas fa-wave-square"></i><span>TCN (Temporal Context)</span></div>
           <div class="tech-item"><i class="fas fa-calculator"></i><span>NumPy / SciPy</span></div>
+          <div class="tech-item"><i class="fas fa-chart-area"></i><span>PSD Feature Extraction</span></div>
         </div>
       </div>
       <div class="tech-category">
         <h4><i class="fas fa-database"></i> Data</h4>
         <div class="tech-items">
           <div class="tech-item"><i class="fas fa-file-archive"></i><span>.mat files (MATLAB)</span></div>
-          <div class="tech-item"><i class="fas fa-sitemap"></i><span>EDF / CSV support</span></div>
-          <div class="tech-item"><i class="fas fa-microscope"></i><span>IEEE ADHD Dataset</span></div>
-          <div class="tech-item"><i class="fas fa-stethoscope"></i><span>Custom EEG recordings</span></div>
+          <div class="tech-item"><i class="fas fa-users"></i><span>121 Patients Dataset</span></div>
+          <div class="tech-item"><i class="fas fa-microscope"></i><span>IEEE DataPort</span></div>
+          <div class="tech-item"><i class="fas fa-broadcast-tower"></i><span>19-Channel EEG Montage</span></div>
         </div>
       </div>
     </div>
@@ -534,6 +534,37 @@
   </div>
 </section>
 
+<!-- ═══════════════════════════════════════════════════════════ DATASET + LITERATURE -->
+<section class="section" id="dataset">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag"><i class="fas fa-database"></i> Dataset &amp; Literature</div>
+      <h2>Dataset &amp; Research Background</h2>
+      <p>Built on a publicly available clinical EEG dataset with a comprehensive review of 11 key papers.</p>
+    </div>
+    <div class="steps-grid" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem">
+      <div class="step-card">
+        <div class="step-icon-wrap"><div class="step-icon"><i class="fas fa-database"></i></div></div>
+        <h3>IEEE DataPort Dataset</h3>
+        <p>EEG recordings from <strong>121 patients</strong> in MATLAB .mat format. 19-channel recordings covering frontal, temporal, central, parietal, and occipital regions. Includes ADHD patients and healthy controls across delta, theta, alpha, beta, and gamma bands.</p>
+        <div class="step-tags"><span>121 Patients</span><span>19 Channels</span><span>.mat Format</span></div>
+      </div>
+      <div class="step-card">
+        <div class="step-icon-wrap"><div class="step-icon"><i class="fas fa-book-open"></i></div></div>
+        <h3>Literature Survey (11 Papers)</h3>
+        <p>Comprehensive review spanning 2019–2025 covering XGBoost (90.81% acc), EBM (95.81%), CNN with Grad-CAM (92.19%), Gaussian SVM (94.2%), CNN-LSTM (98.23%), EEGNet (83%), and Brain Network + CNN (94.67%).</p>
+        <div class="step-tags"><span>2019–2025</span><span>11 Papers</span><span>Multiple Architectures</span></div>
+      </div>
+      <div class="step-card">
+        <div class="step-icon-wrap"><div class="step-icon"><i class="fas fa-map-marker-alt"></i></div></div>
+        <h3>19-Channel EEG Montage</h3>
+        <p>Fp1, Fp2 (Frontal Polar) · F3, F4, F7, F8, Fz (Frontal) · C3, C4, Cz (Central) · T3, T4, T5, T6 (Temporal) · P3, P4, Pz (Parietal) · O1, O2 (Occipital) — following the 10–20 international system.</p>
+        <div class="step-tags"><span>Frontal</span><span>Temporal</span><span>Parietal</span><span>Occipital</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ═══════════════════════════════════════════════════════════ FOOTER -->
 <footer class="footer">
   <div class="container">
@@ -541,7 +572,12 @@
       <div class="footer-brand">
         <div class="nav-logo"><i class="fas fa-brain"></i></div>
         <span class="nav-title">Neuro<span class="accent">ADHD</span></span>
-        <p>EEG-based ADHD detection using Explainable AI — a research system designed for clinical understanding and academic demonstration.</p>
+        <p>EEG-Based Deep Learning Framework for ADHD Prediction — a research project using CNN + TCN with clinical explainability, built on a 121-patient IEEE DataPort dataset.</p>
+        <div style="margin-top:1rem;font-size:0.8rem;color:#94a3b8;line-height:1.8">
+          <strong style="color:#e2e8f0">Guide:</strong> Prof. Pradnya Joshi<br/>
+          <strong style="color:#e2e8f0">Team:</strong> Sahil B. Bohara (60009230187) &middot; Omkar P. Bandikatte (60009230009) &middot; Raj Patel (60009230191)<br/>
+          <strong style="color:#e2e8f0">Dept:</strong> CSE (Data Science) &middot; Date: 10/01/2026
+        </div>
       </div>
       <div class="footer-links">
         <h5>Navigation</h5>
