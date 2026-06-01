@@ -1,7 +1,26 @@
-backend/
+# Build outputs
 .dist/
+.vercel
+
+# Python
 *.pyc
 __pycache__/
 *.egg-info/
+*.pyo
+.venv/
+venv/
+
+# Environment
 .env
-.vercel
+.env.*
+
+# Backend runtime folders (not source)
+backend/uploads/
+backend/__pycache__/
+
+# Large dataset files (IEEE DataPort .mat files — do not commit)
+ADHD/ADHD_part1/*.mat
+ADHD/ADHD_part2/*.mat
+ADHD/Control_part1/*.mat
+ADHD/Control_part2/*.mat
+ADHD/mat to csv.ipynb

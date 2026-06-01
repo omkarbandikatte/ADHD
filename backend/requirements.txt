@@ -1,0 +1,29 @@
+# NeuroADHD Backend — Python Dependencies
+# Install with: pip install -r requirements.txt
+
+# ── Core web framework ─────────────────────────────────────
+flask>=3.0.0
+flask-cors>=4.0.0
+werkzeug>=3.0.0
+gunicorn>=21.2.0
+
+# ── Scientific computing ───────────────────────────────────
+numpy>=1.24.0
+scipy>=1.11.0
+scikit-learn>=1.3.0
+joblib>=1.3.0
+
+# ── MATLAB .mat file support ───────────────────────────────
+# mat73 supports HDF5-based MATLAB 7.3 .mat files
+mat73>=0.62
+
+# ── PyTorch (CPU-only — lighter for cloud deployment) ──────
+# Installs from PyTorch's CPU-only wheel index (~180MB compressed)
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.1.0+cpu
+
+# ── Gradient boosting (ensemble fallback) ─────────────────
+xgboost>=2.0.0
+
+# ── Utilities ─────────────────────────────────────────────
+pandas>=2.0.0

@@ -1,0 +1,231 @@
+"""
+cnn_tcn_model.py  —  CNN + TCN Deep Learning Architecture for ADHD EEG Classification
+
+Architecture (matches the Clinical System diagram):
+  Input (batch, 19_channels, T_timesteps)
+       |
+  [CNN Block] — Spatial Feature Learning
+    Conv2D (temporal) -> DepthwiseSpatialConv2D -> AvgPool -> Dropout
+       |
+  [TCN Block x4] — Temporal Pattern Recognition
+    Dilated causal Conv1D with residual connections (dilation = 1,2,4,8)
+       |
+  [Classifier Head]
+    GlobalAvgPool -> Dense(128) -> Dropout(0.5) -> Dense(2) -> Softmax
+
+Preprocessing per architecture diagram:
+  - Band-pass: 0.5–50 Hz
+  - Artifact removal (amplitude threshold)
+  - Segmentation: 2–5 s epochs
+  - Z-score normalization per channel
+"""
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import numpy as np
+from typing import Tuple
+
+
+# ─── CNN Block (Spatial Feature Learning) ────────────────────────────────────
+
+class CNNBlock(nn.Module):
+    """
+    Spatial feature extractor inspired by EEGNet / DeepConvNet.
+    Input:  (B, 1, n_channels, T)
+    Output: (B, n_filters*2, T//pool)
+    """
+
+    def __init__(self, n_channels: int = 19, n_filters: int = 32,
+                 temporal_kernel: int = 25, pool_size: int = 4,
+                 dropout: float = 0.25):
+        super().__init__()
+
+        # 1. Temporal convolution — learns time-domain patterns per channel
+        self.temporal_conv = nn.Conv2d(
+            1, n_filters,
+            kernel_size=(1, temporal_kernel),
+            padding=(0, temporal_kernel // 2),
+            bias=False
+        )
+        self.temporal_bn = nn.BatchNorm2d(n_filters)
+
+        # 2. Depthwise spatial convolution — mixes across all 19 channels
+        self.spatial_conv = nn.Conv2d(
+            n_filters, n_filters * 2,
+            kernel_size=(n_channels, 1),
+            groups=n_filters,          # depthwise
+            bias=False
+        )
+        self.spatial_bn = nn.BatchNorm2d(n_filters * 2)
+
+        self.elu = nn.ELU()
+        self.pool = nn.AvgPool2d((1, pool_size))
+        self.dropout = nn.Dropout(dropout)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        # x: (B, 1, C, T)
+        x = self.elu(self.temporal_bn(self.temporal_conv(x)))    # (B, F, C, T)
+        x = self.elu(self.spatial_bn(self.spatial_conv(x)))      # (B, F*2, 1, T)
+        x = self.pool(x)                                          # (B, F*2, 1, T/4)
+        x = self.dropout(x)
+        x = x.squeeze(2)                                          # (B, F*2, T/4)
+        return x
+
+
+# ─── TCN Residual Block (Temporal Pattern Recognition) ────────────────────────
+
+class TCNResidualBlock(nn.Module):
+    """
+    Single dilated causal residual block.
+    Uses two Conv1d layers with the same dilation + a residual skip connection.
+    """
+
+    def __init__(self, in_ch: int, out_ch: int, kernel_size: int = 3,
+                 dilation: int = 1, dropout: float = 0.25):
+        super().__init__()
+        pad = (kernel_size - 1) * dilation  # causal padding
+
+        self.conv1 = nn.Conv1d(
+            in_ch, out_ch, kernel_size,
+            dilation=dilation, padding=pad
+        )
+        self.bn1 = nn.BatchNorm1d(out_ch)
+
+        self.conv2 = nn.Conv1d(
+            out_ch, out_ch, kernel_size,
+            dilation=dilation, padding=pad
+        )
+        self.bn2 = nn.BatchNorm1d(out_ch)
+
+        self.elu = nn.ELU()
+        self.dropout = nn.Dropout(dropout)
+
+        # 1x1 conv for residual if channel dims differ
+        self.residual_proj = (
+            nn.Conv1d(in_ch, out_ch, 1) if in_ch != out_ch else nn.Identity()
+        )
+        self._pad = pad
+
+    def _chomp(self, x: torch.Tensor) -> torch.Tensor:
+        """Remove future samples added by causal padding."""
+        return x[:, :, :-self._pad].contiguous() if self._pad > 0 else x
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        res = self.residual_proj(x)
+
+        out = self.elu(self.bn1(self._chomp(self.conv1(x))))
+        out = self.dropout(out)
+        out = self.elu(self.bn2(self._chomp(self.conv2(out))))
+        out = self.dropout(out)
+
+        return self.elu(out + res)
+
+
+# ─── Full CNN + TCN Model ─────────────────────────────────────────────────────
+
+class CNNTCNModel(nn.Module):
+    """
+    Full ADHD classifier matching the architecture diagram:
+      EEG epochs (19ch × T) → CNN Spatial → TCN Temporal → Dense → Prediction
+    """
+
+    def __init__(self,
+                 n_channels: int = 19,
+                 n_timepoints: int = 256,    # epoch length in samples (2s @ 128Hz)
+                 n_classes: int = 2,
+                 cnn_filters: int = 32,
+                 tcn_channels: int = 64,
+                 tcn_layers: int = 4,        # dilations: 1, 2, 4, 8
+                 tcn_kernel: int = 3,
+                 dropout_cnn: float = 0.25,
+                 dropout_tcn: float = 0.25,
+                 dropout_fc: float = 0.50):
+        super().__init__()
+
+        # ── CNN Block ────────────────────────────────────────
+        self.cnn = CNNBlock(
+            n_channels=n_channels,
+            n_filters=cnn_filters,
+            temporal_kernel=25,
+            pool_size=4,
+            dropout=dropout_cnn,
+        )
+        cnn_out_ch = cnn_filters * 2     # 64
+        cnn_out_t  = n_timepoints // 4   # T/4 after pooling
+
+        # ── TCN Stack (dilation = 1, 2, 4, 8, …) ───────────
+        tcn_blocks = []
+        in_ch = cnn_out_ch
+        for i in range(tcn_layers):
+            dil = 2 ** i
+            tcn_blocks.append(
+                TCNResidualBlock(in_ch, tcn_channels, tcn_kernel, dil, dropout_tcn)
+            )
+            in_ch = tcn_channels
+        self.tcn = nn.Sequential(*tcn_blocks)
+
+        # ── Classifier Head ──────────────────────────────────
+        self.gap = nn.AdaptiveAvgPool1d(1)   # Global Average Pooling
+        self.fc1 = nn.Linear(tcn_channels, 128)
+        self.bn_fc = nn.BatchNorm1d(128)
+        self.dropout_fc = nn.Dropout(dropout_fc)
+        self.fc2 = nn.Linear(128, n_classes)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        # x: (B, C, T)  raw normalised epoch
+        x = x.unsqueeze(1)          # (B, 1, C, T) for Conv2D
+        x = self.cnn(x)             # (B, 64, T/4)
+        x = self.tcn(x)             # (B, tcn_ch, T/4)
+        x = self.gap(x).squeeze(-1) # (B, tcn_ch)
+        x = self.dropout_fc(F.elu(self.bn_fc(self.fc1(x))))
+        return self.fc2(x)          # (B, n_classes)  logits
+
+    def predict_proba(self, x: torch.Tensor) -> torch.Tensor:
+        return F.softmax(self.forward(x), dim=1)
+
+
+# ─── Attention heatmap (Grad-CAM on TCN output) ───────────────────────────────
+
+class GradCAMHook:
+    """
+    Captures gradients and activations from the last TCN block for
+    visualizing which time steps influenced the prediction.
+    """
+
+    def __init__(self, model: CNNTCNModel):
+        self.activations = None
+        self.gradients   = None
+        last_tcn = list(model.tcn.children())[-1]
+        last_tcn.register_forward_hook(self._save_activation)
+        last_tcn.register_full_backward_hook(self._save_gradient)
+
+    def _save_activation(self, module, input, output):
+        self.activations = output.detach()
+
+    def _save_gradient(self, module, grad_in, grad_out):
+        self.gradients = grad_out[0].detach()
+
+    def get_cam(self) -> np.ndarray:
+        if self.activations is None or self.gradients is None:
+            return np.zeros(1)
+        weights = self.gradients.mean(dim=-1, keepdim=True)  # (B, ch, 1)
+        cam = (weights * self.activations).sum(dim=1)         # (B, T)
+        cam = F.relu(cam)
+        cam = cam / (cam.max(dim=-1, keepdim=True).values + 1e-8)
+        return cam.cpu().numpy()
+
+
+# ─── Convenience builder ──────────────────────────────────────────────────────
+
+def build_model(n_channels: int = 19, epoch_samples: int = 256,
+                n_classes: int = 2) -> CNNTCNModel:
+    return CNNTCNModel(
+        n_channels=n_channels,
+        n_timepoints=epoch_samples,
+        n_classes=n_classes,
+    )
+
+
+def count_params(model: nn.Module) -> int:
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)

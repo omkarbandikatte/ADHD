@@ -1,0 +1,12 @@
+{
+  "model_type": "cnn_tcn",
+  "trained": true,
+  "n_channels": 19,
+  "epoch_samples": 256,
+  "best_epoch": 10,
+  "val_accuracy": 0.7110208227526663,
+  "val_auc": 0.7101117025164629,
+  "validation": "Subject-level holdout split",
+  "n_subjects": 121,
+  "dataset": "IEEE DataPort ADHD EEG (19-channel .mat)"
+}

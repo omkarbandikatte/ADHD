@@ -1,11 +1,10 @@
 {
   "version": 2,
-  "builds": [
-    { "src": "**/*.html", "use": "@vercel/static" },
-    { "src": "css/**", "use": "@vercel/static" },
-    { "src": "js/**", "use": "@vercel/static" }
-  ],
+  "buildCommand": null,
+  "outputDirectory": ".",
   "routes": [
-    { "src": "/(.*)", "dest": "/$1" }
+    { "src": "/dashboard", "dest": "/dashboard.html" },
+    { "src": "/demo",      "dest": "/demo.html"      },
+    { "src": "/(.*)",      "dest": "/$1"             }
   ]
 }
