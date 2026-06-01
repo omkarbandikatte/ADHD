@@ -257,7 +257,7 @@ def health():
         'status':       'online',
         'model_loaded': loaded,
         'model_type':   _meta.get('model_type', 'CNN+TCN'),
-        'version':      '2.0.0',
+        'version':      '2.1.0',
         'runtime':      'onnx',
     })
 
