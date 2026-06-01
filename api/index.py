@@ -170,7 +170,7 @@ def _band_power(ch_data: np.ndarray, srate: int) -> dict:
     powers = {}
     for band, (lo, hi) in BANDS.items():
         mask = (f >= lo) & (f <= hi)
-        powers[band] = float(np.trapz(pxx[mask], f[mask])) if mask.any() else 0.0
+        powers[band] = float(np.trapezoid(pxx[mask], f[mask])) if mask.any() else 0.0
     return powers
 
 

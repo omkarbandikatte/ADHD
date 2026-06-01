@@ -428,7 +428,7 @@ class EEGProcessor:
             f, psd = sig.welch(epoch[i], fs=fs, nperseg=nperseg, scaling='density')
             for j, (bname, (lo, hi)) in enumerate(self.BANDS.items()):
                 mask = (f >= lo) & (f < hi)
-                powers[i, j] = np.trapz(psd[mask], f[mask]) if mask.sum() > 0 else 0.0
+                powers[i, j] = np.trapezoid(psd[mask], f[mask]) if mask.sum() > 0 else 0.0
         return powers
 
     def _frontal_central_features(self, ch_names, avg_bp, band_names):
