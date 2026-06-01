@@ -14,6 +14,10 @@ from werkzeug.utils import secure_filename
 
 warnings.filterwarnings('ignore')
 
+# NumPy 2.0 removed np.trapz — use np.trapezoid on 2.x, shim on 1.x
+if not hasattr(np, 'trapezoid'):
+    np.trapezoid = np.trapz  # type: ignore[attr-defined]
+
 # ─── App setup ───────────────────────────────────────────────────────────────
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
