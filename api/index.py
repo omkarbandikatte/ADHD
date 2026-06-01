@@ -120,7 +120,8 @@ def _load_mat_bytes(raw_bytes: bytes):
     return data, srate
 
 
-def _bandpass(data: np.ndarray, srate: int, lo=0.5, hi=40.0) -> np.ndarray:
+def _bandpass(data: np.ndarray, srate: int, lo=0.5, hi=50.0) -> np.ndarray:
+    # hi=50 Hz matches EEGProcessor training pipeline (was 40 Hz — mismatch fixed)
     nyq = srate / 2.0
     lo  = max(lo, 0.1)
     hi  = min(hi, nyq * 0.95)
@@ -137,8 +138,12 @@ def _notch(data: np.ndarray, srate: int, freq=50.0) -> np.ndarray:
 
 
 def _make_epochs(data: np.ndarray, srate: int,
-                 epoch_sec=2.0, n_ch=19, ep_samples=256):
-    """Resample to 128 Hz, normalise, slice into (n_epochs, n_ch, ep_samples)."""
+                 epoch_sec: float = 2.0, n_ch: int = 19, ep_samples: int = 256,
+                 overlap: float = 0.5, artifact_thresh: float = 100.0):
+    """
+    Resample → trim channels → 50% overlap epochs → artifact rejection (100 µV)
+    → per-epoch per-channel z-score.  Matches EEGProcessor training pipeline exactly.
+    """
     n_ch_actual, n_samp = data.shape
 
     # ── Trim / pad channels to N_CHANNELS ─────────────────────────────────
@@ -149,23 +154,30 @@ def _make_epochs(data: np.ndarray, srate: int,
         data = np.vstack([data, pad])
 
     # ── Resample to 128 Hz ──────────────────────────────────────────────────
-    target_srate = 128
-    if srate != target_srate:
-        new_len = int(n_samp * target_srate / srate)
+    if srate != 128:
+        new_len = int(n_samp * 128 / srate)
         data    = sig.resample(data, new_len, axis=1)
-
     n_samp = data.shape[1]
 
-    # ── Per-channel z-score normalisation ──────────────────────────────────
-    mu  = data.mean(axis=1, keepdims=True)
-    std = data.std(axis=1, keepdims=True) + 1e-8
-    data = (data - mu) / std
+    # ── Slice with 50% overlap (step=128) ──────────────────────────────────
+    step     = int(ep_samples * (1.0 - overlap))        # 128 samples
+    starts   = range(0, n_samp - ep_samples + 1, step)
+    raw_eps  = [data[:, s:s + ep_samples] for s in starts]
 
-    # ── Slice into epochs ──────────────────────────────────────────────────
-    step   = ep_samples
-    starts = range(0, n_samp - ep_samples + 1, step)
-    epochs = np.stack([data[:, s:s + ep_samples] for s in starts], axis=0)
-    return epochs.astype(np.float32)   # (n_epochs, N_CH, EP_SAMP)
+    # ── Artifact rejection on raw (pre-z-score) epochs ─────────────────────
+    clean = [ep for ep in raw_eps if np.abs(ep).max() <= artifact_thresh]
+    if not clean:                                        # safety: keep least-noisy half
+        clean = sorted(raw_eps, key=lambda e: np.abs(e).max())
+        clean = clean[:max(1, len(clean) // 2)]
+
+    # ── Per-epoch, per-channel z-score (matches training) ──────────────────
+    normed = []
+    for ep in clean:
+        mu  = ep.mean(axis=1, keepdims=True)
+        std = ep.std(axis=1,  keepdims=True) + 1e-8
+        normed.append((ep - mu) / std)
+
+    return np.stack(normed, axis=0).astype(np.float32)  # (n_epochs, N_CH, EP_SAMP)
 
 
 def _band_power(ch_data: np.ndarray, srate: int) -> dict:
@@ -201,28 +213,33 @@ def _predict_epochs(epochs: np.ndarray):
     # Run batch inference
     logits = sess.run(['logits'], {input_name: epochs})[0]  # (n_epochs, 2)
 
-    # Softmax
-    exp    = np.exp(logits - logits.max(axis=1, keepdims=True))
-    probs  = exp / exp.sum(axis=1, keepdims=True)           # (n_epochs, 2)
+    # Softmax → probabilities
+    exp   = np.exp(logits - logits.max(axis=1, keepdims=True))
+    probs = exp / exp.sum(axis=1, keepdims=True)           # (n_epochs, 2)
 
-    # Aggregate: mean across epochs
-    mean_prob   = probs.mean(axis=0)
-    adhd_prob   = float(mean_prob[0])
-    ctrl_prob   = float(mean_prob[1])
-    prediction  = 'ADHD' if adhd_prob > ctrl_prob else 'Normal'
-    confidence  = float(max(adhd_prob, ctrl_prob))
-    epoch_probs = [float(p[0]) for p in probs]
+    # Training labels: 0=Control, 1=ADHD  →  probs[:,0]=P(Control), probs[:,1]=P(ADHD)
+    mean_prob = probs.mean(axis=0)
+    adhd_prob = float(mean_prob[1])   # P(ADHD)    — index 1
+    ctrl_prob = float(mean_prob[0])   # P(Control) — index 0
 
-    # Simple attention heatmap: gradient of ADHD prob w.r.t. channel mean power
-    # (lightweight surrogate — channel mean absolute value as saliency)
+    # Use optimal threshold from model metadata (Youden's J), fall back to 0.5
+    threshold  = float(_meta.get('optimal_threshold', 0.5))
+    prediction = 'ADHD' if adhd_prob >= threshold else 'Normal'
+    confidence = adhd_prob if prediction == 'ADHD' else ctrl_prob
+
+    # Per-epoch ADHD probabilities (p[:,1] = P(ADHD))
+    epoch_probs = [float(p[1]) for p in probs]
+
+    # Channel saliency heatmap (mean absolute amplitude per channel)
     ch_salience = np.abs(epochs).mean(axis=(0, 2))   # (19,)
     mn, mx      = ch_salience.min(), ch_salience.max()
     attention   = ((ch_salience - mn) / (mx - mn + 1e-8)).tolist()
 
     return {
         'prediction':        prediction,
-        'probability':       adhd_prob if prediction == 'ADHD' else ctrl_prob,
+        'probability':       adhd_prob,   # always P(ADHD) for consistent display
         'confidence':        confidence,
+        'threshold_used':    threshold,
         'n_epochs':          len(epochs),
         'epoch_probs':       epoch_probs,
         'attention_heatmap': attention,
@@ -331,9 +348,10 @@ def process():
         data  = sess['data']
         srate = sess['srate']
 
-        # Filter
-        data_filt = _bandpass(data.copy(), srate)
-        data_filt = _notch(data_filt, srate)
+        # Common Average Reference → Bandpass → Notch  (matches training pipeline)
+        data_car  = data.copy() - data.mean(axis=0, keepdims=True)  # CAR first
+        data_filt = _bandpass(data_car, srate)                      # 0.5–50 Hz
+        data_filt = _notch(data_filt, srate)                        # 50 Hz notch
 
         n_ch_actual = min(data_filt.shape[0], N_CHANNELS)
         ch_names    = CH_NAMES[:n_ch_actual]
@@ -341,14 +359,11 @@ def process():
         # Band powers
         band_powers = _extract_band_powers(data_filt[:n_ch_actual], srate, ch_names)
 
-        # Epochs for prediction
-        epochs          = _make_epochs(data_filt, srate)
-        n_epochs_before = len(epochs)
-
-        # Simple artifact rejection: discard epochs with amplitude > 150 µV
-        amp_ok  = np.abs(epochs).max(axis=(1, 2)) < 150
-        epochs  = epochs[amp_ok]
-        removed = n_epochs_before - len(epochs)
+        # Epochs: 50% overlap, artifact rejection at 100 µV, per-epoch z-score
+        n_before = len(range(0, data_filt.shape[1] - EPOCH_SAMPLES + 1,
+                             EPOCH_SAMPLES // 2))
+        epochs   = _make_epochs(data_filt, srate)  # artifact rejection built-in
+        removed  = max(0, n_before - len(epochs))
 
         sess['processed'] = {
             'epochs':      epochs,
@@ -386,11 +401,10 @@ def predict():
         try:
             data   = sess['data']
             srate  = sess['srate']
-            df     = _bandpass(data.copy(), srate)
-            df     = _notch(df, srate)
-            epochs = _make_epochs(df, srate)
-            amp_ok = np.abs(epochs).max(axis=(1, 2)) < 150
-            epochs = epochs[amp_ok]
+            data_car = data.copy() - data.mean(axis=0, keepdims=True)  # CAR
+            df       = _bandpass(data_car, srate)                      # 0.5–50 Hz
+            df       = _notch(df, srate)                               # 50 Hz
+            epochs   = _make_epochs(df, srate)                         # overlap + z-score
             sess['processed']['epochs'] = epochs
         except Exception as e:
             return jsonify({'error': f'Auto-process failed: {e}'}), 500
