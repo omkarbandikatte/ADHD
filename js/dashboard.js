@@ -4,8 +4,8 @@
  *          prediction display, SHAP rendering, report generation.
  */
 
-// API_BASE is set by js/api-config.js (auto-selects Render URL on deployed site)
-const API_BASE = window.API_BASE || 'http://localhost:5000/api';
+// API_BASE is set by js/api-config.js — read dynamically so fallback URL changes take effect
+const getApiBase = () => window.API_BASE || 'http://localhost:5000/api';
 
 // ─── State ───────────────────────────────────────────────────────────────────
 const State = {
@@ -42,13 +42,16 @@ function addLog(msg, type = 'info') {
 }
 
 // ─── Backend health check ────────────────────────────────────────────────────
+// Exposed on window so api-config.js can re-trigger after fallback URL switch
+window.checkBackendHealth = () => checkBackend();
+
 async function checkBackend() {
   const dot  = $('statusDot');
   const text = $('statusText');
   if (dot) dot.className = 'status-dot connecting';
   if (text) text.textContent = 'Connecting…';
   try {
-    const res = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(8000) });
+    const res = await fetch(`${getApiBase()}/health`, { signal: AbortSignal.timeout(8000) });
     if (res.ok) {
       State.backendOnline = true;
       if (dot)  dot.className  = 'status-dot online';
@@ -153,7 +156,7 @@ async function uploadToBackend(file) {
     setPipelineProgress(0, 10, 'Uploading .mat file…');
     addLog('Sending file to backend API…', 'info');
 
-    const uploadRes = await fetch(`${API_BASE}/upload`, { method: 'POST', body: formData });
+    const uploadRes = await fetch(`${getApiBase()}/upload`, { method: 'POST', body: formData });
     if (!uploadRes.ok) throw new Error(`Upload failed: ${uploadRes.status}`);
     const { session_id, channels, srate, duration } = await uploadRes.json();
 
@@ -165,7 +168,7 @@ async function uploadToBackend(file) {
     // Process
     setPipelineStep(2, 'running');
     await delay(300);
-    const processRes = await fetch(`${API_BASE}/process`, {
+    const processRes = await fetch(`${getApiBase()}/process`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ session_id }),
@@ -217,7 +220,7 @@ async function uploadToBackend(file) {
     setPipelineStep(6, 'running');
     setPipelineProgress(4, 85, 'Running CNN+TCN model…');
     addLog('Running CNN + TCN deep learning model…', 'info');
-    const predRes = await fetch(`${API_BASE}/predict`, {
+    const predRes = await fetch(`${getApiBase()}/predict`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ session_id }),
