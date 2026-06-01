@@ -48,8 +48,7 @@ async function checkBackend() {
   if (dot) dot.className = 'status-dot connecting';
   if (text) text.textContent = 'Connecting…';
   try {
-    // Render free tier can take 30-60s to wake up on first request
-    const res = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(60000) });
+    const res = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(8000) });
     if (res.ok) {
       State.backendOnline = true;
       if (dot)  dot.className  = 'status-dot online';
@@ -63,7 +62,7 @@ async function checkBackend() {
   State.backendOnline = false;
   if (dot)  dot.className  = 'status-dot offline';
   if (text) text.textContent = 'Backend offline — Demo mode available';
-  addLog('Backend not reachable. Running in offline demo mode. (If using deployed site, backend may be waking up — try again in 30s)', 'warning');
+  addLog('Backend not reachable. Running in offline demo mode.', 'warning');
   return false;
 }
 
@@ -279,9 +278,12 @@ async function uploadToBackend(file) {
 
   } catch (err) {
     hideLoading();
-    addLog(`Error: ${err.message}`, 'error');
-    showAlert(`Error: ${err.message}. Falling back to demo mode.`, 'error');
-    await simulatePipeline('demo', true);
+    const msg = err.message.includes('413') || err.message.includes('too large')
+      ? 'File too large for serverless upload (max ~4MB). Try a shorter EEG recording or use Demo mode.'
+      : err.message;
+    addLog(`Upload/prediction error: ${msg}`, 'error');
+    showAlert(`Error: ${msg}`, 'error');
+    // Do NOT auto-fall back to demo — let the user decide
   }
 }
 
@@ -592,8 +594,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Demo button
   $('demoBtn')?.addEventListener('click', async () => {
+    if (State.demoRunning) return;   // prevent double-click
+    State.demoRunning = true;
     addLog('Demo mode triggered manually.', 'info');
     await simulatePipeline('demo_adhd_patient.mat', true);
+    State.demoRunning = false;
   });
 
   // Reset button
